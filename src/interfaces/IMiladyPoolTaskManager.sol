@@ -18,7 +18,9 @@ interface IMiladyPoolTaskManager {
     }
     // TODO: Figure out what other structs you need here (look at Arena X, Uniswap X, etc.)
     // Need functions
-    function createOrder(Order calldata order) external returns (uint32);
+    function createOrder(
+        Order calldata order
+    ) external payable returns (uint32);
     function cancelOrder(uint32 orderId) external;
     // TODO: Look at Uniswap X and Arena X for inspiration
 }

@@ -2,10 +2,11 @@
 pragma solidity ^0.8.26;
 
 import {BaseHook} from "v4-periphery/src/base/hooks/BaseHook.sol";
-import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
-import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
+import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
+import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
+import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
 import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
@@ -41,7 +42,7 @@ contract MiladyPoolTaskManager is
         IRegistryCoordinator _registryCoordinator,
         IPoolManager _poolManager
     ) BLSSignatureChecker(_registryCoordinator) BaseHook(_poolManager) {
-        TASK_RESPONSE_WINDOW_BLOCK = 100;
+        // TASK_RESPONSE_WINDOW_BLOCK = 100;
     }
 
     function getHookPermissions()
@@ -77,10 +78,10 @@ contract MiladyPoolTaskManager is
         _transferOwnership(initialOwner);
     }
 
-    function createNewOrder(Order calldata order) external payable {
+    function createOrder(
+        Order calldata order
+    ) external payable returns (uint32) {
         // TODO: Figure out what the actual order will be
-        Order calldata order = Order({orderId: 1});
-
         // TODO: Update the global state variables (order ids, hashes, etc.)
     }
 

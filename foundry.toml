@@ -3,31 +3,6 @@ src = "src"
 out = "out"
 libs = ["lib"]
 fs_permissions = [{ access = "read-write", path = "./"}]
-
-remappings = [
-    "@eigenlayer/=lib/eigenlayer-middleware/lib/eigenlayer-contracts/src/",
-    "@eigenlayer-scripts/=lib/eigenlayer-middleware/lib/eigenlayer-contracts/script/",
-    "@eigenlayer-middleware/=lib/eigenlayer-middleware/",
-    "@credible-squaring/=src/",
-    "@openzeppelin/=lib/eigenlayer-middleware/lib/eigenlayer-contracts/lib/openzeppelin-contracts/",
-    "@openzeppelin-upgrades/=lib/eigenlayer-middleware/lib/eigenlayer-contracts/lib/openzeppelin-contracts-upgradeable/",
-    "ds-test/=lib/forge-std/lib/ds-test/src/"
-    "@ensdomains/=lib/v4-periphery/lib/v4-core/node_modules/@ensdomains/",
-    "@openzeppelin/=lib/v4-periphery/lib/v4-core/lib/openzeppelin-contracts/",
-    "@openzeppelin/contracts/=lib/v4-periphery/lib/v4-core/lib/openzeppelin-contracts/contracts/",
-    "@uniswap/v4-core/=lib/v4-periphery/lib/v4-core/",
-    "ds-test/=lib/v4-periphery/lib/v4-core/lib/forge-std/lib/ds-test/src/",
-    "erc4626-tests/=lib/v4-periphery/lib/v4-core/lib/openzeppelin-contracts/lib/erc4626-tests/",
-    "forge-gas-snapshot/=lib/v4-periphery/lib/v4-core/lib/forge-gas-snapshot/src/",
-    "forge-std/=lib/forge-std/src/",
-    "hardhat/=lib/v4-periphery/lib/v4-core/node_modules/hardhat/",
-    "openzeppelin-contracts/=lib/v4-periphery/lib/v4-core/lib/openzeppelin-contracts/",
-    "permit2/=lib/v4-periphery/lib/permit2/",
-    "solmate/=lib/v4-periphery/lib/v4-core/lib/solmate/",
-    "v4-core/=lib/v4-periphery/lib/v4-core/src/",
-    "v4-periphery/=lib/v4-periphery/",
-]
-
 gas_reports = ["*"]
 optimizer = true
 optimizer_runs = 800
