@@ -19,4 +19,4 @@ gas_reports = ["*"]
 optimizer = true
 optimizer_runs = 200
 via_ir = false
-solc_version = '0.8.12'
+solc_version = '0.8.26'

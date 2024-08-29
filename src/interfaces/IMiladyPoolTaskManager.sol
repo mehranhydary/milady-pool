@@ -13,7 +13,9 @@ interface IMiladyPoolTaskManager {
     event OrderCancelled(uint32 indexed orderId);
     // TODO: Add events for challenges (successful and unsuccessful)
     // Need structs
-    struct Order {}
+    struct Order {
+        uint32 orderId;
+    }
     // TODO: Figure out what other structs you need here (look at Arena X, Uniswap X, etc.)
     // Need functions
     function createOrder(Order calldata order) external returns (uint32);
