@@ -12,3 +12,7 @@ docs/
 
 # Dotenv file
 .env
+
+# Operator
+operator/dist/
+operator/node_modules/
