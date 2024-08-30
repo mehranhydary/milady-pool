@@ -1,12 +1,30 @@
 {
+	"ts-node": {
+		"esm": true,
+		"module": "CommonJS",
+		"require": ["tsconfig-paths/register"]
+	},
 	"compilerOptions": {
-		"rootDirs": ["src"],
-		"outDir": "dist",
-		"lib": ["es2020"],
-		"target": "es2020",
-		"module": "esnext",
+		"target": "ES2020",
+		"lib": ["esnext"],
+		"module": "commonjs",
+		"rootDir": ".",
 		"moduleResolution": "node",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["src/*"]
+		},
+		"typeRoots": ["./node_modules/@types", "./@types", "./@types/*"],
+		"types": ["node"],
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"checkJs": false,
+		"outDir": "./.build",
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
-		"types": ["node"]
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"skipLibCheck": true
 	}
 }
