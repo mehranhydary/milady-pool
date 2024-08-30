@@ -8,7 +8,7 @@
 	"type": "module",
 	"scripts": {
 		"compile": "tsc",
-		"start": "yarn run compile && node dist/api.js"
+		"start": "yarn run compile && node .build/api.js"
 	},
 	"dependencies": {
 		"@apollo/server": "^4.11.0",
