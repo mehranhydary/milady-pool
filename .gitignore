@@ -14,5 +14,5 @@ docs/
 .env
 
 # Operator
-operator/dist/
-operator/node_modules/
+/operator/dist/
+/operator/node_modules/
