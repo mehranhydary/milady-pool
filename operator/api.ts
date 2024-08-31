@@ -1,3 +1,4 @@
+console.log('Entering api.ts')
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { getSchema, GraphqlContext } from './core/graphql/schema'

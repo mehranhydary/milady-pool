@@ -1,0 +1,6 @@
+{
+	"ignore": ["node_modules"],
+	"watch": [".", ".env"],
+	"exec": "ts-node scripts/runSingleton.ts --project tsconfig.json",
+	"ext": "ts"
+}

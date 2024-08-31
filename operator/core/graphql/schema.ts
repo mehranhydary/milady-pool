@@ -7,7 +7,8 @@ import {
 	typeDefs as ordersTypeDefs,
 } from './extensions/orders'
 
-import { merge } from 'lodash'
+import pkg from 'lodash'
+const { merge } = pkg
 
 const resolvers = merge(ordersResolvers)
 
