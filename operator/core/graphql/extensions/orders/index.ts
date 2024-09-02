@@ -1,5 +1,5 @@
-import { MutationResolvers, QueryResolvers } from '@/types/resolvers'
 import gql from 'graphql-tag'
+import { MutationResolvers, QueryResolvers } from '@/types/resolvers'
 
 // TODO: Pool Key might give some details about token address and range and what
 // not so ensure that you are not capturing more than you need to
@@ -65,52 +65,77 @@ export const resolvers: OrdersResolvers = {
 		orders: {
 			resolve: async (_parent, _args, { getDb }) => {
 				const db = getDb()
-				return [
-					{
-						walletAddress:
-							'0x1234567890abcdef1234567890abcdef12345678',
-						tickToSellAt: 100,
-						zeroForOne: true,
-						inputAmount: '1000',
-						poolKey: {
-							token0: 'ETH',
-							token1: 'USDT',
-							fee: '0.3%',
-							tickSpacing: 60,
-							hooks: 'default',
-						},
-						permit2Signature:
-							'0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef',
-						startTime: new Date().toISOString(),
-						deadline: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-					},
-				]
+				const orders = await db.order.findMany()
+				return orders
 			},
 		},
 		// TODO: Add get order by person, get order by id, get order by pool key, get order by status
 	},
 	Mutation: {
 		createOrder: {
-			resolve: async (_parent, _args, { getDb }) => {
-				const db = getDb()
-				return {
-					id: '1',
-					walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-					tickToSellAt: 100,
-					zeroForOne: true,
-					inputAmount: '1000',
-					poolKey: {
-						token0: 'ETH',
-						token1: 'USDT',
-						fee: '0.3%',
-						tickSpacing: 60,
-						hooks: 'default',
+			resolve: async (
+				_parent,
+				{
+					input: {
+						walletAddress,
+						tickToSellAt,
+						zeroForOne,
+						inputAmount,
+						outputAmount,
+						poolKey,
+						permit2Signature,
+						startTime,
+						deadline,
 					},
-					permit2Signature:
-						'0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef',
-					startTime: new Date().toISOString(),
-					deadline: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-				}
+				},
+				{ getDb }
+			) => {
+				const db = getDb()
+				// TODO: Create a function here to valiate inputs
+				// then create the pool key (or find it)
+				// and then create the order
+
+				// TODO: Once this is done, we should also figure out how to
+				// validate hooks and pool keys on chain
+				const _poolKey = await db.poolKey.findOrCreate({
+					where: {
+						token0: poolKey.token0,
+						token1: poolKey.token1,
+						fee: poolKey.fee,
+						tickSpacing: poolKey.tickSpacing,
+						hooks: poolKey.hooks,
+					},
+					create: poolKey,
+				})
+				const order = await db.order.findOrCreate({
+					where: {
+						trader: walletAddress,
+						tickToSellAt,
+						zeroForOne,
+						inputAmount,
+						outputAmount,
+						poolKeyId: _poolKey.id,
+						permit2Signature,
+						startTime,
+						deadline,
+					},
+					create: {
+						walletAddress,
+						tickToSellAt,
+						zeroForOne,
+						inputAmount,
+						outputAmount,
+						poolKey: _poolKey,
+						permit2Signature,
+						startTime,
+						deadline,
+					},
+					update: {},
+					include: {
+						poolKey: true,
+					},
+				})
+				return order
 			},
 		},
 	},
