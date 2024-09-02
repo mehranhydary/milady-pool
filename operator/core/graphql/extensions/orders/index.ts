@@ -50,6 +50,7 @@ export const resolvers: OrdersResolvers = {
 				},
 			]
 		},
+		// TODO: Add get order by person, get order by id, get order by pool key, get order by status
 	},
 	Mutation: {
 		createOrder: async (_: any, { input }: { input: any }) => {
