@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id String @id @default(dbgenerated("prefix_uuid('order-'::text)"))
+  zeroForOne Boolean
+  trader String
+  tickToSellAt String
+  inputAmount String
+  poolKey PoolKey @relation(fields: [poolKeyId], references: [id])
+  poolKeyId String
+}
+
+model PoolKey {
+  id String @id @default(dbgenerated("prefix_uuid('poolKey-'::text)"))
+  token0 String
+  token1 String
+  fee String
+  tickSpacing String
+  hooks String
+  orders Order[]
+}
+
+
+

@@ -1,6 +1,24 @@
-import { default as gql } from 'graphql-tag'
+import gql from 'graphql-tag'
 
+// TODO: Pool Key might give some details about token address and range and what
+// not so ensure that you are not capturing more than you need to
 export const typeDefs = gql`
+	type Order {
+		walletAddress: String
+		tickToSellAt: Int
+		zeroForOne: Boolean
+		inputAmount: String
+		poolKey: PoolKey
+	}
+
+	type PoolKey {
+		token0: String
+		token1: String
+		fee: String
+		tickSpacing: Int
+		hooks: String # Figure out if we need to store hooks in an array or...
+	}
+
 	extend type Query {
 		orders: [Order]
 	}
