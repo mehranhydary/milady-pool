@@ -9,10 +9,11 @@ $$ LANGUAGE PLPGSQL VOLATILE;
 -- CreateTable
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL DEFAULT prefix_uuid('order-'::text),
-    "zeroForOne" BOOLEAN NOT NULL,
     "trader" TEXT NOT NULL,
     "tickToSellAt" TEXT NOT NULL,
-    "inputAmount" TEXT NOT NULL,
+    "zeroForOne" BOOLEAN NOT NULL,
+    "inputAmount" TEXT,
+    "outputAmount" TEXT,
     "poolKeyId" TEXT NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")

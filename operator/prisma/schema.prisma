@@ -16,10 +16,11 @@ datasource db {
 
 model Order {
   id String @id @default(dbgenerated("prefix_uuid('order-'::text)"))
-  zeroForOne Boolean
   trader String
   tickToSellAt String
-  inputAmount String
+  zeroForOne Boolean
+  inputAmount String?
+  outputAmount String?
   poolKey PoolKey @relation(fields: [poolKeyId], references: [id])
   poolKeyId String
 }
@@ -33,6 +34,3 @@ model PoolKey {
   hooks String
   orders Order[]
 }
-
-
-
