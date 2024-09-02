@@ -17,12 +17,12 @@ const config: CodegenConfig = {
 				'@graphql-codegen/typescript',
 				'@graphql-codegen/typescript-resolvers',
 			],
-			schema: ['src/core/graphql/extensions/*/**'],
+			schema: ['./core/graphql/extensions/*/**'],
 			config: {
-				contextType: '../core/graphql/schema#GraphqlContext',
-				rootValueType: '../core/graphql/schema#RootValue',
+				contextType: './core/graphql/schema#GraphqlContext',
+				rootValueType: './core/graphql/schema#RootValue',
 				mappers: {
-					Decimal: '../core/graphql/schema#Decimal',
+					Decimal: './core/graphql/schema#Decimal',
 				},
 				useIndexSignature: true,
 				printFieldsOnNewLines: true,
