@@ -17,7 +17,10 @@ import {RegistryCoordinator} from "@eigenlayer-middleware/src/RegistryCoordinato
 import {BLSSignatureChecker, IRegistryCoordinator} from "@eigenlayer-middleware/src/BLSSignatureChecker.sol";
 import {OperatorStateRetriever} from "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 import "@eigenlayer-middleware/src/libraries/BN254.sol";
+
+// Custom:
 import "./interfaces/IMiladyPoolTaskManager.sol";
+import {PublicValuesStruct} from "./base/Structs.sol";
 
 contract MiladyPoolTaskManager is
     BaseHook,
@@ -83,15 +86,6 @@ contract MiladyPoolTaskManager is
         _initializePauser(_pauserRegistry, UNPAUSE_ALL);
         _transferOwnership(initialOwner);
     }
-
-    function createOrder(
-        Order calldata order
-    ) external payable returns (uint32) {
-        // TODO: Figure out what the actual order will be
-        // TODO: Update the global state variables (order ids, hashes, etc.)
-    }
-
-    function cancelOrder(uint32 orderId) external {}
 
     function verifiyMiladyPoolOrderProof(
         bytes calldata _publicValues,
