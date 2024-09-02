@@ -23,6 +23,8 @@ model Order {
   outputAmount String?
   poolKey PoolKey @relation(fields: [poolKeyId], references: [id])
   poolKeyId String
+  permit2Signature String
+  deadline DateTime
 }
 
 model PoolKey {

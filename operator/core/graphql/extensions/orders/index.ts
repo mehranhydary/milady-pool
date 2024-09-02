@@ -2,6 +2,8 @@ import gql from 'graphql-tag'
 
 // TODO: Pool Key might give some details about token address and range and what
 // not so ensure that you are not capturing more than you need to
+
+// TODO: Figure out fees eventually
 export const typeDefs = gql`
 	type Order {
 		walletAddress: String
@@ -9,6 +11,9 @@ export const typeDefs = gql`
 		zeroForOne: Boolean
 		inputAmount: String
 		poolKey: PoolKey
+		permit2Signature: String
+		startTime: ISO8601Date
+		deadline: ISO8601Date
 	}
 
 	type PoolKey {
