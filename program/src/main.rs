@@ -1,7 +1,12 @@
-// TODO: Add comments
+//! A simple program that takes a number n as input, writes the n - 1 th and n th fibonacci 
+//! numbers as an output
+
+// These two lines are necessary for program to properly compile
+// Under the hood, we wrap your main fucntion with some extra code so it behaves prperly
+// in the zkVM environment
 
 #![no_main]
-sp1_zkvm:entrypoint!(main);
+sp1_zkvm::entrypoint!(main);
 
 use alloy_sol_types::SolType;
 use milady_pool_lib::{

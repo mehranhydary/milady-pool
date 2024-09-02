@@ -37,12 +37,17 @@ contract MiladyPoolTaskManager is
     // uint256 internal constant _THRESHOLD_DENOMINATOR = 100;
 
     // TODO: Figure out if we need latest order id, order hashes, zkps, matching order ids, responses, challenges, etc.
+    address public verifier;
+    bytes32 public miladyPoolProgramVKey;
 
     constructor(
         IRegistryCoordinator _registryCoordinator,
-        IPoolManager _poolManager
+        IPoolManager _poolManager,
+        // SP1 contracts to verify public values
+        address _verifier
     ) BLSSignatureChecker(_registryCoordinator) BaseHook(_poolManager) {
         // TASK_RESPONSE_WINDOW_BLOCK = 100;
+        verifier = _verifier;
     }
 
     function getHookPermissions()
@@ -72,7 +77,8 @@ contract MiladyPoolTaskManager is
 
     function initialize(
         IPauserRegistry _pauserRegistry,
-        address initialOwner
+        address initialOwner,
+        bytes32 _miladyPoolProgramVKey
     ) public initializer {
         _initializePauser(_pauserRegistry, UNPAUSE_ALL);
         _transferOwnership(initialOwner);
@@ -86,4 +92,32 @@ contract MiladyPoolTaskManager is
     }
 
     function cancelOrder(uint32 orderId) external {}
+
+    function verifiyMiladyPoolOrderProof(
+        bytes calldata _publicValues,
+        bytes calldata _proofBytes
+    )
+        public
+        view
+        returns (
+            // TODO: Fix the return type
+            bool
+        )
+    {
+        require(
+            miladyPoolProgramVKey != bytes32(0),
+            "Verification key not initialized"
+        );
+        ISP1Verifier(verifier).verifyProof(
+            miladyPoolProgramVKey,
+            _publicValues,
+            _proofBytes
+        );
+        PublicValuesStruct memory publicValues = abi.decode(
+            _publicValues,
+            (PublicValuesStruct)
+        );
+        // TODO: Fix the return type
+        return true;
+    }
 }

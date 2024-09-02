@@ -16,7 +16,7 @@ use sp1_sdk::{ProverClient, SP1Stdin};
 
 pub const MILADY_POOL_ELF: &[u8] = include_bytes!("../../../elf/riscv32im-succinct-zkvm-elf");
 
-#[derive(Parse, Debug)]
+#[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
   #[clap(long)]

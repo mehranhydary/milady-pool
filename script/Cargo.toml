@@ -1,8 +1,8 @@
 [package]
 version = "0.1.0"
 name = "milady-pool-script"
-edition = "2024"
-default-run "fibonacci" # Need to change this
+edition = "2021"
+default-run = "fibonacci" # Need to change this
 
 [[bin]]
 name = "fibonacci" # Need to change this
