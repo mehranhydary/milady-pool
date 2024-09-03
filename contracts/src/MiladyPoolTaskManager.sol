@@ -62,6 +62,8 @@ contract MiladyPoolTaskManager is
     error InvalidOrder();
     error NothingToClaim();
     error NotEnoughToClaim();
+    error VerificationKeyNotInitialized();
+    error OrderNotFound();
 
     constructor(
         IRegistryCoordinator _registryCoordinator,
@@ -141,7 +143,7 @@ contract MiladyPoolTaskManager is
             int24 tickSpacing,
             address hooks,
             bytes32 permit2Signature
-        ) = verifiyMiladyPoolOrderProof(publicValues, proofBytes);
+        ) = verifyMiladyPoolOrderProof(publicValues, proofBytes);
 
         // Validate the pool key
         // Validate the outputs of the proof
@@ -266,7 +268,7 @@ contract MiladyPoolTaskManager is
     }
 
     // TODO: Swap function will be called with some data to swap
-    function verifiyMiladyPoolOrderProof(
+    function verifyMiladyPoolOrderProof(
         bytes memory _publicValues,
         bytes memory _proofBytes
     )
@@ -287,10 +289,12 @@ contract MiladyPoolTaskManager is
             bytes32
         )
     {
-        require(
-            miladyPoolProgramVKey != bytes32(0),
-            "Verification key not initialized"
-        );
+        if (miladyPoolProgramVKey == bytes32(0)) {
+            revert VerificationKeyNotInitialized();
+        }
+        if (!pendingOrders[_proofBytes]) {
+            revert OrderNotFound();
+        }
         ISP1Verifier(verifier).verifyProof(
             miladyPoolProgramVKey,
             _publicValues,
