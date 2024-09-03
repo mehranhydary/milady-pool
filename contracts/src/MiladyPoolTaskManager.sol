@@ -8,6 +8,10 @@ import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
+import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
+import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
+import {TickMath} from "v4-core/libraries/TickMath.sol";
+import {Currency, CurrencyLibrary} from "v4-core/types/Currency.sol";
 
 // Eigenlayer
 import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
@@ -41,6 +45,7 @@ contract MiladyPoolTaskManager is
     using BN254 for BN254.G1Point;
     using StateLibrary for IPoolManager;
     using PoolIdLibrary for PoolKey;
+    using CurrencyLibrary for Currency;
 
     // TODO: Do we need order response / challenge times?
     // uint32 public immutable TASK_RESPONSE_WINDOW_BLOCK;
@@ -48,6 +53,7 @@ contract MiladyPoolTaskManager is
     // uint256 internal constant _THRESHOLD_DENOMINATOR = 100;
 
     // TODO: Figure out if we need latest order id, order hashes, zkps, matching order ids, responses, challenges, etc.
+    mapping(PoolId poolId => int24 lastTick) public lastTicks;
     mapping(bytes => bool) public pendingOrders;
     address public verifier;
     bytes32 public miladyPoolProgramVKey;
@@ -81,15 +87,121 @@ contract MiladyPoolTaskManager is
                 afterAddLiquidity: false,
                 beforeRemoveLiquidity: false,
                 afterRemoveLiquidity: false,
-                beforeSwap: false,
+                beforeSwap: true,
                 afterSwap: true,
                 beforeDonate: false,
                 afterDonate: false,
-                beforeSwapReturnDelta: false,
+                beforeSwapReturnDelta: true,
                 afterSwapReturnDelta: false,
                 afterAddLiquidityReturnDelta: false,
                 afterRemoveLiquidityReturnDelta: false
             });
+    }
+
+    function afterInitialize(
+        address,
+        PoolKey calldata key,
+        uint160,
+        int24 tick,
+        bytes calldata
+    ) external override onlyByPoolManager returns (bytes4) {
+        lastTicks[key.toId()] = tick;
+        return this.afterInitialize.selector;
+    }
+
+    function beforeSwap(
+        address,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata,
+        bytes calldata data
+    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+        if (data.length == 0)
+            return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
+
+        (bytes memory publicValues, bytes memory proofBytes) = abi.decode(
+            data,
+            (bytes, bytes)
+        );
+
+        (
+            address walletAddress,
+            int24 tickToSellAt,
+            bool zeroForOne,
+            uint256 inputAmount,
+            uint256 outputAmount,
+            address tokenInput,
+            address token0,
+            address token1,
+            uint24 fee,
+            int24 tickSpacing,
+            address hooks,
+            bytes32 permit2Signature
+        ) = verifiyMiladyPoolOrderProof(publicValues, proofBytes);
+
+        // Validate the pool key
+        // Validate the outputs of the proof
+
+        // TODO: Refactor this section; not gonna work because
+        // you have to activate the permit 2 signature
+        BalanceDelta delta = poolManager.swap(
+            key,
+            IPoolManager.SwapParams({
+                zeroForOne: zeroForOne,
+                // TODO: Come back to this because  you might need to cast it and add a negative (check logic)
+                amountSpecified: tokenInput == token0
+                    ? zeroForOne
+                        ? int256(inputAmount)
+                        : -int256(inputAmount)
+                    : zeroForOne
+                        ? int256(outputAmount)
+                        : -int256(outputAmount),
+                sqrtPriceLimitX96: zeroForOne
+                    ? TickMath.MIN_SQRT_PRICE + 1
+                    : TickMath.MAX_SQRT_PRICE - 1
+            }),
+            // TODO: Figure out if you want to handle this here again too lmao (permit2signature)
+            ""
+        );
+
+        if (zeroForOne) {
+            if (delta.amount0() < 0) {
+                _settle(key.currency0, uint128(-delta.amount0()));
+            }
+
+            if (delta.amount1() > 0) {
+                _take(key.currency1, uint128(-delta.amount1()));
+            }
+        } else {
+            if (delta.amount0() > 0) {
+                _take(key.currency0, uint128(-delta.amount0()));
+            }
+
+            if (delta.amount1() < 0) {
+                _settle(key.currency1, uint128(-delta.amount1()));
+            }
+        }
+
+        pendingOrders[proofBytes] = false;
+        emit OrderFulfilled(proofBytes);
+
+        // Return the appropriate values
+        // TODO: Need to update toBeforeSwapDelta to handle token in and out amounts
+        return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
+    }
+
+    function afterSwap(
+        address sender,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata params,
+        BalanceDelta,
+        bytes calldata
+    ) external override onlyByPoolManager returns (bytes4, int128) {
+        if (sender == address(this)) return (this.afterSwap.selector, 0);
+        (, int24 currentTick, , ) = poolManager.getSlot0(key.toId());
+
+        emit TickUpdated(currentTick);
+
+        return (this.afterSwap.selector, 0);
     }
 
     function initialize(
@@ -112,36 +224,90 @@ contract MiladyPoolTaskManager is
         miladyPoolProgramVKey = _miladyPoolProgramVKey;
     }
 
-    function createOrder(bytes calldata _proofBytes) external {}
+    function createOrder(bytes calldata _proofBytes) external {
+        pendingOrders[_proofBytes] = true;
+        emit OrderCreated(_proofBytes);
+    }
 
-    function cancelOrder(bytes calldata _proofBytes) external {}
+    function cancelOrder(bytes calldata _proofBytes) external {
+        if (!pendingOrders[_proofBytes]) revert InvalidOrder();
+        pendingOrders[_proofBytes] = false;
+        emit OrderCancelled(_proofBytes);
+    }
+
+    function getLowerUsableTick(
+        int24 tick,
+        int24 tickSpacing
+    ) public pure returns (int24) {
+        int24 intervals = tick / tickSpacing;
+
+        if (tick < 0 && tick % tickSpacing != 0) {
+            intervals--;
+        }
+
+        return intervals * tickSpacing;
+    }
+
+    function _settle(Currency currency, uint128 amount) internal {
+        // Transfer tokens to PM and let it know
+        poolManager.sync(currency);
+        currency.transfer(address(poolManager), amount);
+        poolManager.settle();
+    }
+
+    function _take(Currency currency, uint128 amount) internal {
+        // Take tokens out of PM to our hook contract
+        poolManager.take(currency, address(this), amount);
+    }
 
     // TODO: Swap function will be called with some data to swap
-    // function verifiyMiladyPoolOrderProof(
-    //     bytes calldata _publicValues,
-    //     bytes calldata _proofBytes
-    // )
-    //     public
-    //     view
-    //     returns (
-    //         // TODO: Fix the return type
-    //         bool
-    //     )
-    // {
-    //     require(
-    //         miladyPoolProgramVKey != bytes32(0),
-    //         "Verification key not initialized"
-    //     );
-    //     ISP1Verifier(verifier).verifyProof(
-    //         miladyPoolProgramVKey,
-    //         _publicValues,
-    //         _proofBytes
-    //     );
-    //     PublicValuesStruct memory publicValues = abi.decode(
-    //         _publicValues,
-    //         (PublicValuesStruct)
-    //     );
-    //     // TODO: Fix the return type
-    //     return true;
-    // }
+    function verifiyMiladyPoolOrderProof(
+        bytes memory _publicValues,
+        bytes memory _proofBytes
+    )
+        public
+        view
+        returns (
+            address,
+            int24,
+            bool,
+            uint256,
+            uint256,
+            address,
+            address,
+            address,
+            uint24,
+            int24,
+            address,
+            bytes32
+        )
+    {
+        require(
+            miladyPoolProgramVKey != bytes32(0),
+            "Verification key not initialized"
+        );
+        ISP1Verifier(verifier).verifyProof(
+            miladyPoolProgramVKey,
+            _publicValues,
+            _proofBytes
+        );
+        PublicValuesStruct memory publicValues = abi.decode(
+            _publicValues,
+            (PublicValuesStruct)
+        );
+        return (
+            publicValues.walletAddress,
+            publicValues.tickToSellAt,
+            publicValues.zeroForOne,
+            publicValues.inputAmount,
+            publicValues.outputAmount,
+            publicValues.tokenInput,
+            publicValues.token0,
+            publicValues.token1,
+            publicValues.fee,
+            publicValues.tickSpacing,
+            publicValues.hooks,
+            publicValues.permit2Signature
+        );
+    }
 }

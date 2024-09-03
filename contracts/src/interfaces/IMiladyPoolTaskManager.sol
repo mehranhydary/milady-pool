@@ -6,7 +6,10 @@ interface IMiladyPoolTaskManager {
     event OrderCreated(bytes proofBytes);
     // TODO: Figure out if we need a correpsonding order id
     // or a zkp or both
-    event OrderFulfilled(bytes proofBytes, bytes matchingProofBytes);
+    // TODO: Figure out if you want to add more details for the trade here
+    event OrderFulfilled(bytes proofBytes);
+
+    event TickUpdated(int24 tick);
 
     event OrderCancelled(bytes proofBytes);
     // TODO: Add events for challenges (successful and unsuccessful)
