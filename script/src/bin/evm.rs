@@ -11,7 +11,7 @@ use alloy_sol_types::SolType;
 use clap::Parser;
 use milady_pool_lib::PublicValuesStruct;
 use serde::{Deserialize, Serialize};
-use sp1_sdk::{HashableKey, ProviderClient, SP1ProofWithPublicValues, SP1Stdin, SP1VerifyingKey};
+use sp1_sdk::{HashableKey, ProverClient, SP1ProofWithPublicValues, SP1Stdin, SP1VerifyingKey};
 use std::path::PathBuf;
 
 // The ELF file for Succint RISC-V zkVM
@@ -38,9 +38,9 @@ struct SP1MiladyPoolProofFixture {
 fn main () {
   sp1_sdk::utils::setup_logger();
 
-  let args = EvmArgs::parse();
+  let args = EVMArgs::parse();
 
-  let client = ProviderClient::new();
+  let client = ProverClient::new();
 
   let (pk, vk) = client.setup(MILADY_POOL_ELF);
 
@@ -53,8 +53,8 @@ fn main () {
   create_plonk_fixture(&proof, &vk);
 }
 
-function create_plonk_fixture(proof: &SP1MiladyPoolProofFixture, vk: &SP1VerifyingKey)  {
-  let bytes = proof.public_values.as_slice();
+fn create_plonk_fixture(proof: &SP1ProofWithPublicValues, vk: &SP1VerifyingKey)  {
+  let bytes= proof.public_values.as_slice();
 
   let PublicValuesStruct { n, a, b } = PublicValuesStruct::abi_decode(bytes, false).expect("Failed to decode public values");
 
@@ -64,7 +64,7 @@ function create_plonk_fixture(proof: &SP1MiladyPoolProofFixture, vk: &SP1Verifyi
     n,
     vkey: vk.bytes32(),
     public_values: hex::encode(bytes),
-    proof: hex::encode(proof.proof),
+    proof: format!("0x{}", hex::encode(proof.bytes())),
   };
 
   println!("Verification Key: {}", fixture.vkey);

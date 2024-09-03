@@ -2578,6 +2578,7 @@ name = "milady-pool-lib"
 version = "0.1.0"
 dependencies = [
  "alloy-sol-types",
+ "ethereum-types",
 ]
 
 [[package]]
@@ -2585,6 +2586,7 @@ name = "milady-pool-program"
 version = "0.1.0"
 dependencies = [
  "alloy-sol-types",
+ "ethereum-types",
  "milady-pool-lib",
  "sp1-zkvm",
 ]
@@ -2595,6 +2597,7 @@ version = "0.1.0"
 dependencies = [
  "alloy-sol-types",
  "clap",
+ "ethereum-types",
  "hex",
  "milady-pool-lib",
  "serde",

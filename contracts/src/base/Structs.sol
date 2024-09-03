@@ -15,4 +15,5 @@ struct PublicValuesStruct {
     uint24 fee;
     int24 tickSpacing;
     IHooks hooks;
+    bytes32 permit2Signature;
 }
