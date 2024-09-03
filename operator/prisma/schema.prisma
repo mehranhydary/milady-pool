@@ -21,10 +21,16 @@ model Order {
   zeroForOne Boolean
   inputAmount String?
   outputAmount String?
+  tokenInput String
   poolKey PoolKey @relation(fields: [poolKeyId], references: [id])
   poolKeyId String
   permit2Signature String
+  startTime DateTime
   deadline DateTime
+
+  @@index([trader])
+  @@index([poolKeyId])
+
 }
 
 model PoolKey {
@@ -35,4 +41,7 @@ model PoolKey {
   tickSpacing String
   hooks String
   orders Order[]
+
+  @@index([token0])
+  @@index([token1])
 }

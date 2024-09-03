@@ -7,31 +7,31 @@ import { MutationResolvers, QueryResolvers } from '@/types/resolvers'
 // TODO: Figure out fees eventually
 export const typeDefs = gql`
 	input CreateOrderInput {
-		walletAddress: String!
-		tickToSellAt: Int!
-		zeroForOne: Boolean!
+		trader: String!
+		# Can be current tick
+		tickToSellAt: Int
+		tokenInput: String!
 		# TODO: Fix this to be a Decimal or BigInt
 		inputAmount: String
 		outputAmount: String
-		poolKey: PoolKeyInput!
-		permit2Signature: String!
-		startTime: ISO8601Date!
-		deadline: ISO8601Date!
-	}
-
-	input PoolKeyInput {
-		token0: String!
-		token1: String!
+		tokenA: String!
+		tokenB: String!
 		fee: String!
 		tickSpacing: Int!
 		hooks: String # Figure out if we need to store hooks in an array or...
+		permit2Signature: String!
+		startTime: ISO8601Date
+		# Set this to a default of 1 week from now
+		deadline: ISO8601Date
 	}
 
 	type Order {
-		walletAddress: String
+		trader: String
 		tickToSellAt: Int
 		zeroForOne: Boolean
 		inputAmount: String
+		outputAmount: String
+		# TODO: Add partial fills
 		poolKey: PoolKey
 		permit2Signature: String
 		startTime: ISO8601Date
@@ -77,12 +77,16 @@ export const resolvers: OrdersResolvers = {
 				_parent,
 				{
 					input: {
-						walletAddress,
+						trader,
 						tickToSellAt,
-						zeroForOne,
+						tokenInput,
 						inputAmount,
 						outputAmount,
-						poolKey,
+						tokenA,
+						tokenB,
+						hooks,
+						fee,
+						tickSpacing,
 						permit2Signature,
 						startTime,
 						deadline,
@@ -97,38 +101,54 @@ export const resolvers: OrdersResolvers = {
 
 				// TODO: Once this is done, we should also figure out how to
 				// validate hooks and pool keys on chain
-				const _poolKey = await db.poolKey.findOrCreate({
+
+				const [token0, token1] =
+					tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA]
+
+				const zeroForOne = tokenInput === tokenA
+
+				const poolKey = await db.poolKey.findOrCreate({
 					where: {
-						token0: poolKey.token0,
-						token1: poolKey.token1,
-						fee: poolKey.fee,
-						tickSpacing: poolKey.tickSpacing,
-						hooks: poolKey.hooks,
-					},
-					create: poolKey,
-				})
-				const order = await db.order.findOrCreate({
-					where: {
-						trader: walletAddress,
-						tickToSellAt,
-						zeroForOne,
-						inputAmount,
-						outputAmount,
-						poolKeyId: _poolKey.id,
-						permit2Signature,
-						startTime,
-						deadline,
+						token0,
+						token1,
+						fee,
+						tickSpacing,
+						hooks,
 					},
 					create: {
-						walletAddress,
+						token0,
+						token1,
+						fee,
+						tickSpacing,
+						hooks,
+					},
+					update: {},
+				})
+
+				const _startTime = startTime || new Date()
+				const _deadline = deadline || new Date(Date.now() + 604800000)
+
+				const order = await db.order.findOrCreate({
+					where: {
+						trader,
 						tickToSellAt,
-						zeroForOne,
 						inputAmount,
 						outputAmount,
-						poolKey: _poolKey,
+						zeroForOne,
+						poolKeyId: poolKey.id,
 						permit2Signature,
-						startTime,
-						deadline,
+						startTime: _startTime,
+						deadline: _deadline,
+					},
+					create: {
+						trader,
+						tickToSellAt,
+						inputAmount,
+						outputAmount,
+						poolKey,
+						permit2Signature,
+						startTime: _startTime,
+						deadline: _deadline,
 					},
 					update: {},
 					include: {

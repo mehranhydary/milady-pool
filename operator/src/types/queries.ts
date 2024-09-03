@@ -16,15 +16,19 @@ export interface Scalars {
 }
 
 export interface CreateOrderInput {
-  deadline: Scalars['ISO8601Date']['input'];
+  deadline?: InputMaybe<Scalars['ISO8601Date']['input']>;
+  fee: Scalars['String']['input'];
+  hooks?: InputMaybe<Scalars['String']['input']>;
   inputAmount?: InputMaybe<Scalars['String']['input']>;
   outputAmount?: InputMaybe<Scalars['String']['input']>;
   permit2Signature: Scalars['String']['input'];
-  poolKey: PoolKeyInput;
-  startTime: Scalars['ISO8601Date']['input'];
-  tickToSellAt: Scalars['Int']['input'];
-  walletAddress: Scalars['String']['input'];
-  zeroForOne: Scalars['Boolean']['input'];
+  startTime?: InputMaybe<Scalars['ISO8601Date']['input']>;
+  tickSpacing: Scalars['Int']['input'];
+  tickToSellAt?: InputMaybe<Scalars['Int']['input']>;
+  tokenA: Scalars['String']['input'];
+  tokenB: Scalars['String']['input'];
+  tokenInput: Scalars['String']['input'];
+  trader: Scalars['String']['input'];
 }
 
 export interface Mutation {
@@ -39,11 +43,12 @@ export interface MutationcreateOrderArgs {
 export interface Order {
   deadline?: Maybe<Scalars['ISO8601Date']['output']>;
   inputAmount?: Maybe<Scalars['String']['output']>;
+  outputAmount?: Maybe<Scalars['String']['output']>;
   permit2Signature?: Maybe<Scalars['String']['output']>;
   poolKey?: Maybe<PoolKey>;
   startTime?: Maybe<Scalars['ISO8601Date']['output']>;
   tickToSellAt?: Maybe<Scalars['Int']['output']>;
-  walletAddress?: Maybe<Scalars['String']['output']>;
+  trader?: Maybe<Scalars['String']['output']>;
   zeroForOne?: Maybe<Scalars['Boolean']['output']>;
 }
 
@@ -53,14 +58,6 @@ export interface PoolKey {
   tickSpacing?: Maybe<Scalars['Int']['output']>;
   token0?: Maybe<Scalars['String']['output']>;
   token1?: Maybe<Scalars['String']['output']>;
-}
-
-export interface PoolKeyInput {
-  fee: Scalars['String']['input'];
-  hooks?: InputMaybe<Scalars['String']['input']>;
-  tickSpacing: Scalars['Int']['input'];
-  token0: Scalars['String']['input'];
-  token1: Scalars['String']['input'];
 }
 
 export interface Query {

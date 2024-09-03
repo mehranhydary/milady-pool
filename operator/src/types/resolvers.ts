@@ -19,15 +19,19 @@ export interface Scalars {
 }
 
 export interface CreateOrderInput {
-  deadline: Scalars['ISO8601Date']['input'];
+  deadline?: InputMaybe<Scalars['ISO8601Date']['input']>;
+  fee: Scalars['String']['input'];
+  hooks?: InputMaybe<Scalars['String']['input']>;
   inputAmount?: InputMaybe<Scalars['String']['input']>;
   outputAmount?: InputMaybe<Scalars['String']['input']>;
   permit2Signature: Scalars['String']['input'];
-  poolKey: PoolKeyInput;
-  startTime: Scalars['ISO8601Date']['input'];
-  tickToSellAt: Scalars['Int']['input'];
-  walletAddress: Scalars['String']['input'];
-  zeroForOne: Scalars['Boolean']['input'];
+  startTime?: InputMaybe<Scalars['ISO8601Date']['input']>;
+  tickSpacing: Scalars['Int']['input'];
+  tickToSellAt?: InputMaybe<Scalars['Int']['input']>;
+  tokenA: Scalars['String']['input'];
+  tokenB: Scalars['String']['input'];
+  tokenInput: Scalars['String']['input'];
+  trader: Scalars['String']['input'];
 }
 
 export interface Mutation {
@@ -42,11 +46,12 @@ export interface MutationcreateOrderArgs {
 export interface Order {
   deadline?: Maybe<Scalars['ISO8601Date']['output']>;
   inputAmount?: Maybe<Scalars['String']['output']>;
+  outputAmount?: Maybe<Scalars['String']['output']>;
   permit2Signature?: Maybe<Scalars['String']['output']>;
   poolKey?: Maybe<PoolKey>;
   startTime?: Maybe<Scalars['ISO8601Date']['output']>;
   tickToSellAt?: Maybe<Scalars['Int']['output']>;
-  walletAddress?: Maybe<Scalars['String']['output']>;
+  trader?: Maybe<Scalars['String']['output']>;
   zeroForOne?: Maybe<Scalars['Boolean']['output']>;
 }
 
@@ -56,14 +61,6 @@ export interface PoolKey {
   tickSpacing?: Maybe<Scalars['Int']['output']>;
   token0?: Maybe<Scalars['String']['output']>;
   token1?: Maybe<Scalars['String']['output']>;
-}
-
-export interface PoolKeyInput {
-  fee: Scalars['String']['input'];
-  hooks?: InputMaybe<Scalars['String']['input']>;
-  tickSpacing: Scalars['Int']['input'];
-  token0: Scalars['String']['input'];
-  token1: Scalars['String']['input'];
 }
 
 export interface Query {
@@ -149,7 +146,6 @@ export type ResolversTypes = ResolversObject<{
   Mutation: ResolverTypeWrapper<RootValue>;
   Order: ResolverTypeWrapper<Order>;
   PoolKey: ResolverTypeWrapper<PoolKey>;
-  PoolKeyInput: PoolKeyInput;
   Query: ResolverTypeWrapper<RootValue>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
 }>;
@@ -163,7 +159,6 @@ export type ResolversParentTypes = ResolversObject<{
   Mutation: RootValue;
   Order: Order;
   PoolKey: PoolKey;
-  PoolKeyInput: PoolKeyInput;
   Query: RootValue;
   String: Scalars['String']['output'];
 }>;
@@ -179,11 +174,12 @@ export type MutationResolvers<ContextType = GraphqlContext, ParentType extends R
 export type OrderResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Order'] = ResolversParentTypes['Order']> = ResolversObject<{
   deadline?: Resolver<Maybe<ResolversTypes['ISO8601Date']>, ParentType, ContextType>;
   inputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  outputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   permit2Signature?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   poolKey?: Resolver<Maybe<ResolversTypes['PoolKey']>, ParentType, ContextType>;
   startTime?: Resolver<Maybe<ResolversTypes['ISO8601Date']>, ParentType, ContextType>;
   tickToSellAt?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  walletAddress?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  trader?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   zeroForOne?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

@@ -6,7 +6,7 @@ import {IHooks} from "v4-core/interfaces/IHooks.sol";
 struct PublicValuesStruct {
     address walletAddress;
     int24 tickToSellAt;
-    bool zeroToOne;
+    bool zeroForOne;
     uint256 inputAmount;
     uint256 outputAmount;
     // TODO: Create a PoolKey with this:
