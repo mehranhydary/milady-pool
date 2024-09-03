@@ -9,11 +9,11 @@ struct PublicValuesStruct {
     bool zeroForOne;
     uint256 inputAmount;
     uint256 outputAmount;
-    // TODO: Create a PoolKey with this:
+    address tokenInput;
     address token0;
     address token1;
     uint24 fee;
     int24 tickSpacing;
-    IHooks hooks;
+    address hooks; // Should be passed into IHooks interface
     bytes32 permit2Signature;
 }

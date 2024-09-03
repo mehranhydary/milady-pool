@@ -45,6 +45,7 @@ export interface MutationcreateOrderArgs {
 
 export interface Order {
   deadline: Scalars['ISO8601Date']['output'];
+  id: Scalars['String']['output'];
   inputAmount?: Maybe<Scalars['String']['output']>;
   outputAmount?: Maybe<Scalars['String']['output']>;
   permit2Signature: Scalars['String']['output'];
@@ -59,6 +60,7 @@ export interface Order {
 export interface PoolKey {
   fee: Scalars['String']['output'];
   hooks: Scalars['String']['output'];
+  id: Scalars['String']['output'];
   tickSpacing: Scalars['Int']['output'];
   token0: Scalars['String']['output'];
   token1: Scalars['String']['output'];
@@ -174,6 +176,7 @@ export type MutationResolvers<ContextType = GraphqlContext, ParentType extends R
 
 export type OrderResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Order'] = ResolversParentTypes['Order']> = ResolversObject<{
   deadline?: Resolver<ResolversTypes['ISO8601Date'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   inputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   outputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   permit2Signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -189,6 +192,7 @@ export type OrderResolvers<ContextType = GraphqlContext, ParentType extends Reso
 export type PoolKeyResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['PoolKey'] = ResolversParentTypes['PoolKey']> = ResolversObject<{
   fee?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   hooks?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   tickSpacing?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   token0?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   token1?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

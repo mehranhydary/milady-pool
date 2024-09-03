@@ -42,6 +42,7 @@ export interface MutationcreateOrderArgs {
 
 export interface Order {
   deadline: Scalars['ISO8601Date']['output'];
+  id: Scalars['String']['output'];
   inputAmount?: Maybe<Scalars['String']['output']>;
   outputAmount?: Maybe<Scalars['String']['output']>;
   permit2Signature: Scalars['String']['output'];
@@ -56,6 +57,7 @@ export interface Order {
 export interface PoolKey {
   fee: Scalars['String']['output'];
   hooks: Scalars['String']['output'];
+  id: Scalars['String']['output'];
   tickSpacing: Scalars['Int']['output'];
   token0: Scalars['String']['output'];
   token1: Scalars['String']['output'];

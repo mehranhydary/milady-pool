@@ -27,6 +27,7 @@ export const typeDefs = gql`
 	}
 
 	type Order {
+		id: String!
 		trader: String!
 		tickToSellAt: Int!
 		zeroForOne: Boolean!
@@ -41,6 +42,7 @@ export const typeDefs = gql`
 	}
 
 	type PoolKey {
+		id: String!
 		token0: String!
 		token1: String!
 		fee: String!

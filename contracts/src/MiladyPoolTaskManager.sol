@@ -22,6 +22,9 @@ import "@eigenlayer-middleware/src/libraries/BN254.sol";
 import "./interfaces/IMiladyPoolTaskManager.sol";
 import {PublicValuesStruct} from "./base/Structs.sol";
 
+// TODO: Need to add ERC6909 or ERC1155 to ensure that
+// users can withdraw their tokens after a trade takes place
+// through the pool and their verified proof is accepted.
 contract MiladyPoolTaskManager is
     BaseHook,
     OwnableUpgradeable,
@@ -40,8 +43,14 @@ contract MiladyPoolTaskManager is
     // uint256 internal constant _THRESHOLD_DENOMINATOR = 100;
 
     // TODO: Figure out if we need latest order id, order hashes, zkps, matching order ids, responses, challenges, etc.
+    mapping(bytes => bool) public pendingOrders;
     address public verifier;
     bytes32 public miladyPoolProgramVKey;
+
+    // Errors
+    error InvalidOrder();
+    error NothingToClaim();
+    error NotEnoughToClaim();
 
     constructor(
         IRegistryCoordinator _registryCoordinator,
@@ -85,6 +94,16 @@ contract MiladyPoolTaskManager is
     ) public initializer {
         _initializePauser(_pauserRegistry, UNPAUSE_ALL);
         _transferOwnership(initialOwner);
+    }
+
+    function setVerifier(address _verifier) public onlyOwner {
+        verifier = _verifier;
+    }
+
+    function setMiladyPoolProgramVKey(
+        bytes32 _miladyPoolProgramVKey
+    ) public onlyOwner {
+        miladyPoolProgramVKey = _miladyPoolProgramVKey;
     }
 
     function verifiyMiladyPoolOrderProof(
