@@ -112,7 +112,7 @@ export const resolvers: OrdersResolvers = {
 						token0,
 						token1,
 						fee,
-						tickSpacing,
+						tickSpacing: tickSpacing.toString(),
 						hooks,
 					},
 					create: {
@@ -131,9 +131,17 @@ export const resolvers: OrdersResolvers = {
 				const order = await db.order.findOrCreate({
 					where: {
 						trader,
-						tickToSellAt,
-						inputAmount,
-						outputAmount,
+						// TODO: If tickToSellAt is not provided, need to get current tick...
+						// can do this later on by querying a pool... not sure which one
+						tickToSellAt: tickToSellAt
+							? tickToSellAt.toString()
+							: '0',
+						inputAmount: inputAmount
+							? inputAmount.toString()
+							: null,
+						outputAmount: outputAmount
+							? outputAmount.toString()
+							: null,
 						zeroForOne,
 						poolKeyId: poolKey.id,
 						permit2Signature,
@@ -142,9 +150,15 @@ export const resolvers: OrdersResolvers = {
 					},
 					create: {
 						trader,
-						tickToSellAt,
-						inputAmount,
-						outputAmount,
+						tickToSellAt: tickToSellAt
+							? tickToSellAt.toString()
+							: '0',
+						inputAmount: inputAmount
+							? inputAmount.toString()
+							: null,
+						outputAmount: outputAmount
+							? outputAmount.toString()
+							: null,
 						poolKey,
 						permit2Signature,
 						startTime: _startTime,

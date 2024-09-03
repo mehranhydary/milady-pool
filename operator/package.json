@@ -9,7 +9,8 @@
 	"scripts": {
 		"build": "rm -rf .build && tsc && yarn tsc-alias -p tsconfig.json && copyfiles -u 1 public/* .build/public && copyfiles **/*.graphql .build",
 		"dev": "nodemon",
-		"codegen": "graphql-codegen --config codegen.ts"
+		"codegen": "graphql-codegen --config codegen.ts",
+		"db:migrate": "npx prisma migrate dev"
 	},
 	"dependencies": {
 		"@apollo/server": "^4.11.0",
