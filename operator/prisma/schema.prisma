@@ -30,7 +30,7 @@ model Order {
 
   @@index([trader])
   @@index([poolKeyId])
-
+  @@unique([trader, tickToSellAt, zeroForOne, tokenInput, poolKeyId])
 }
 
 model PoolKey {
@@ -44,4 +44,5 @@ model PoolKey {
 
   @@index([token0])
   @@index([token1])
+  @@unique([token0, token1, fee, tickSpacing, hooks])
 }

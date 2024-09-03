@@ -1,5 +1,6 @@
 import gql from 'graphql-tag'
 import { MutationResolvers, QueryResolvers } from '@/types/resolvers'
+import { GraphQLError } from 'graphql'
 
 // TODO: Pool Key might give some details about token address and range and what
 // not so ensure that you are not capturing more than you need to
@@ -26,24 +27,25 @@ export const typeDefs = gql`
 	}
 
 	type Order {
-		trader: String
-		tickToSellAt: Int
-		zeroForOne: Boolean
+		trader: String!
+		tickToSellAt: Int!
+		zeroForOne: Boolean!
+		tokenInput: String!
 		inputAmount: String
 		outputAmount: String
 		# TODO: Add partial fills
-		poolKey: PoolKey
-		permit2Signature: String
-		startTime: ISO8601Date
-		deadline: ISO8601Date
+		poolKey: PoolKey!
+		permit2Signature: String!
+		startTime: ISO8601Date!
+		deadline: ISO8601Date!
 	}
 
 	type PoolKey {
-		token0: String
-		token1: String
-		fee: String
-		tickSpacing: Int
-		hooks: String # Figure out if we need to store hooks in an array or...
+		token0: String!
+		token1: String!
+		fee: String!
+		tickSpacing: Int!
+		hooks: String! # Figure out if we need to store hooks in an array or...
 	}
 
 	extend type Query {
@@ -102,74 +104,84 @@ export const resolvers: OrdersResolvers = {
 				// TODO: Once this is done, we should also figure out how to
 				// validate hooks and pool keys on chain
 
-				const [token0, token1] =
-					tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA]
+				try {
+					const [token0, token1] =
+						tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA]
 
-				const zeroForOne = tokenInput === tokenA
+					const zeroForOne = tokenInput === tokenA
 
-				const poolKey = await db.poolKey.findOrCreate({
-					where: {
-						token0,
-						token1,
-						fee,
-						tickSpacing: tickSpacing.toString(),
-						hooks,
-					},
-					create: {
-						token0,
-						token1,
-						fee,
-						tickSpacing,
-						hooks,
-					},
-					update: {},
-				})
+					const poolKey = await db.poolKey.findOrCreate({
+						where: {
+							token0,
+							token1,
+							fee,
+							tickSpacing: tickSpacing.toString(),
+							hooks,
+							token0_token1_fee_tickSpacing_hooks: {
+								token0,
+								token1,
+								fee,
+								tickSpacing: tickSpacing.toString(),
+								hooks,
+							},
+						},
+						create: {
+							token0,
+							token1,
+							fee,
+							tickSpacing: tickSpacing.toString(),
+							hooks,
+						},
+						update: {},
+					})
 
-				const _startTime = startTime || new Date()
-				const _deadline = deadline || new Date(Date.now() + 604800000)
+					const _startTime = startTime || new Date()
+					const _deadline =
+						deadline || new Date(Date.now() + 604800000)
 
-				const order = await db.order.findOrCreate({
-					where: {
-						trader,
-						// TODO: If tickToSellAt is not provided, need to get current tick...
-						// can do this later on by querying a pool... not sure which one
-						tickToSellAt: tickToSellAt
-							? tickToSellAt.toString()
-							: '0',
-						inputAmount: inputAmount
-							? inputAmount.toString()
-							: null,
-						outputAmount: outputAmount
-							? outputAmount.toString()
-							: null,
-						zeroForOne,
-						poolKeyId: poolKey.id,
-						permit2Signature,
-						startTime: _startTime,
-						deadline: _deadline,
-					},
-					create: {
-						trader,
-						tickToSellAt: tickToSellAt
-							? tickToSellAt.toString()
-							: '0',
-						inputAmount: inputAmount
-							? inputAmount.toString()
-							: null,
-						outputAmount: outputAmount
-							? outputAmount.toString()
-							: null,
-						poolKey,
-						permit2Signature,
-						startTime: _startTime,
-						deadline: _deadline,
-					},
-					update: {},
-					include: {
-						poolKey: true,
-					},
-				})
-				return order
+					const order = await db.order.findOrCreate({
+						where: {
+							trader,
+							poolKeyId: poolKey.id,
+							trader_tickToSellAt_zeroForOne_tokenInput_poolKeyId:
+								{
+									trader,
+									tickToSellAt: tickToSellAt
+										? tickToSellAt.toString()
+										: '0',
+									zeroForOne,
+									tokenInput,
+									poolKeyId: poolKey.id,
+								},
+						},
+						create: {
+							trader,
+							tickToSellAt: tickToSellAt
+								? tickToSellAt.toString()
+								: '0',
+							inputAmount: inputAmount
+								? inputAmount.toString()
+								: null,
+							outputAmount: outputAmount
+								? outputAmount.toString()
+								: null,
+							tokenInput,
+							poolKeyId: poolKey.id,
+							permit2Signature,
+							zeroForOne,
+							startTime: _startTime,
+							deadline: _deadline,
+						},
+						update: {},
+						include: {
+							poolKey: true,
+						},
+					})
+					return order
+				} catch (error) {
+					console.error('Error creating order:', error)
+					throw new GraphQLError('Failed to create order')
+				}
 			},
 		},
 	},

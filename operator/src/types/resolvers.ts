@@ -44,23 +44,24 @@ export interface MutationcreateOrderArgs {
 }
 
 export interface Order {
-  deadline?: Maybe<Scalars['ISO8601Date']['output']>;
+  deadline: Scalars['ISO8601Date']['output'];
   inputAmount?: Maybe<Scalars['String']['output']>;
   outputAmount?: Maybe<Scalars['String']['output']>;
-  permit2Signature?: Maybe<Scalars['String']['output']>;
-  poolKey?: Maybe<PoolKey>;
-  startTime?: Maybe<Scalars['ISO8601Date']['output']>;
-  tickToSellAt?: Maybe<Scalars['Int']['output']>;
-  trader?: Maybe<Scalars['String']['output']>;
-  zeroForOne?: Maybe<Scalars['Boolean']['output']>;
+  permit2Signature: Scalars['String']['output'];
+  poolKey: PoolKey;
+  startTime: Scalars['ISO8601Date']['output'];
+  tickToSellAt: Scalars['Int']['output'];
+  tokenInput: Scalars['String']['output'];
+  trader: Scalars['String']['output'];
+  zeroForOne: Scalars['Boolean']['output'];
 }
 
 export interface PoolKey {
-  fee?: Maybe<Scalars['String']['output']>;
-  hooks?: Maybe<Scalars['String']['output']>;
-  tickSpacing?: Maybe<Scalars['Int']['output']>;
-  token0?: Maybe<Scalars['String']['output']>;
-  token1?: Maybe<Scalars['String']['output']>;
+  fee: Scalars['String']['output'];
+  hooks: Scalars['String']['output'];
+  tickSpacing: Scalars['Int']['output'];
+  token0: Scalars['String']['output'];
+  token1: Scalars['String']['output'];
 }
 
 export interface Query {
@@ -172,24 +173,25 @@ export type MutationResolvers<ContextType = GraphqlContext, ParentType extends R
 }>;
 
 export type OrderResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Order'] = ResolversParentTypes['Order']> = ResolversObject<{
-  deadline?: Resolver<Maybe<ResolversTypes['ISO8601Date']>, ParentType, ContextType>;
+  deadline?: Resolver<ResolversTypes['ISO8601Date'], ParentType, ContextType>;
   inputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   outputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  permit2Signature?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  poolKey?: Resolver<Maybe<ResolversTypes['PoolKey']>, ParentType, ContextType>;
-  startTime?: Resolver<Maybe<ResolversTypes['ISO8601Date']>, ParentType, ContextType>;
-  tickToSellAt?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  trader?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  zeroForOne?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  permit2Signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  poolKey?: Resolver<ResolversTypes['PoolKey'], ParentType, ContextType>;
+  startTime?: Resolver<ResolversTypes['ISO8601Date'], ParentType, ContextType>;
+  tickToSellAt?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  tokenInput?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  trader?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  zeroForOne?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type PoolKeyResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['PoolKey'] = ResolversParentTypes['PoolKey']> = ResolversObject<{
-  fee?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  hooks?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  tickSpacing?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  token0?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  token1?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  fee?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  hooks?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tickSpacing?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  token0?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  token1?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 

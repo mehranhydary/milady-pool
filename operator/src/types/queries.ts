@@ -41,23 +41,24 @@ export interface MutationcreateOrderArgs {
 }
 
 export interface Order {
-  deadline?: Maybe<Scalars['ISO8601Date']['output']>;
+  deadline: Scalars['ISO8601Date']['output'];
   inputAmount?: Maybe<Scalars['String']['output']>;
   outputAmount?: Maybe<Scalars['String']['output']>;
-  permit2Signature?: Maybe<Scalars['String']['output']>;
-  poolKey?: Maybe<PoolKey>;
-  startTime?: Maybe<Scalars['ISO8601Date']['output']>;
-  tickToSellAt?: Maybe<Scalars['Int']['output']>;
-  trader?: Maybe<Scalars['String']['output']>;
-  zeroForOne?: Maybe<Scalars['Boolean']['output']>;
+  permit2Signature: Scalars['String']['output'];
+  poolKey: PoolKey;
+  startTime: Scalars['ISO8601Date']['output'];
+  tickToSellAt: Scalars['Int']['output'];
+  tokenInput: Scalars['String']['output'];
+  trader: Scalars['String']['output'];
+  zeroForOne: Scalars['Boolean']['output'];
 }
 
 export interface PoolKey {
-  fee?: Maybe<Scalars['String']['output']>;
-  hooks?: Maybe<Scalars['String']['output']>;
-  tickSpacing?: Maybe<Scalars['Int']['output']>;
-  token0?: Maybe<Scalars['String']['output']>;
-  token1?: Maybe<Scalars['String']['output']>;
+  fee: Scalars['String']['output'];
+  hooks: Scalars['String']['output'];
+  tickSpacing: Scalars['Int']['output'];
+  token0: Scalars['String']['output'];
+  token1: Scalars['String']['output'];
 }
 
 export interface Query {
