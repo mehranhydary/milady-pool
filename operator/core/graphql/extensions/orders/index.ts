@@ -67,7 +67,9 @@ export const resolvers: OrdersResolvers = {
 		orders: {
 			resolve: async (_parent, _args, { getDb }) => {
 				const db = getDb()
-				const orders = await db.order.findMany()
+				const orders = await db.order.findMany({
+					include: { poolKey: true },
+				})
 				return orders
 			},
 		},
@@ -143,13 +145,14 @@ export const resolvers: OrdersResolvers = {
 						where: {
 							trader,
 							poolKeyId: poolKey.id,
-							trader_tickToSellAt_zeroForOne_tokenInput_poolKeyId:
+							trader_tickToSellAt_zeroForOne_tokenInput_startTime_poolKeyId:
 								{
 									trader,
 									tickToSellAt: tickToSellAt
 										? tickToSellAt.toString()
 										: '0',
 									zeroForOne,
+									startTime: _startTime,
 									tokenInput,
 									poolKeyId: poolKey.id,
 								},
