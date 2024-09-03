@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
+// Uniswap
 import {BaseHook} from "v4-periphery/src/base/hooks/BaseHook.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
@@ -8,6 +9,7 @@ import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 
+// Eigenlayer
 import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
 import "@eigenlayer/contracts/permissions/Pausable.sol";
@@ -17,6 +19,9 @@ import {RegistryCoordinator} from "@eigenlayer-middleware/src/RegistryCoordinato
 import {BLSSignatureChecker, IRegistryCoordinator} from "@eigenlayer-middleware/src/BLSSignatureChecker.sol";
 import {OperatorStateRetriever} from "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 import "@eigenlayer-middleware/src/libraries/BN254.sol";
+
+// Succinct
+import {ISP1Verifier} from "@sp1-contracts/ISP1Verifier.sol";
 
 // Custom:
 import "./interfaces/IMiladyPoolTaskManager.sol";
@@ -94,6 +99,7 @@ contract MiladyPoolTaskManager is
     ) public initializer {
         _initializePauser(_pauserRegistry, UNPAUSE_ALL);
         _transferOwnership(initialOwner);
+        miladyPoolProgramVKey = _miladyPoolProgramVKey;
     }
 
     function setVerifier(address _verifier) public onlyOwner {
@@ -106,31 +112,36 @@ contract MiladyPoolTaskManager is
         miladyPoolProgramVKey = _miladyPoolProgramVKey;
     }
 
-    function verifiyMiladyPoolOrderProof(
-        bytes calldata _publicValues,
-        bytes calldata _proofBytes
-    )
-        public
-        view
-        returns (
-            // TODO: Fix the return type
-            bool
-        )
-    {
-        require(
-            miladyPoolProgramVKey != bytes32(0),
-            "Verification key not initialized"
-        );
-        ISP1Verifier(verifier).verifyProof(
-            miladyPoolProgramVKey,
-            _publicValues,
-            _proofBytes
-        );
-        PublicValuesStruct memory publicValues = abi.decode(
-            _publicValues,
-            (PublicValuesStruct)
-        );
-        // TODO: Fix the return type
-        return true;
-    }
+    function createOrder(bytes calldata _proofBytes) external {}
+
+    function cancelOrder(bytes calldata _proofBytes) external {}
+
+    // TODO: Swap function will be called with some data to swap
+    // function verifiyMiladyPoolOrderProof(
+    //     bytes calldata _publicValues,
+    //     bytes calldata _proofBytes
+    // )
+    //     public
+    //     view
+    //     returns (
+    //         // TODO: Fix the return type
+    //         bool
+    //     )
+    // {
+    //     require(
+    //         miladyPoolProgramVKey != bytes32(0),
+    //         "Verification key not initialized"
+    //     );
+    //     ISP1Verifier(verifier).verifyProof(
+    //         miladyPoolProgramVKey,
+    //         _publicValues,
+    //         _proofBytes
+    //     );
+    //     PublicValuesStruct memory publicValues = abi.decode(
+    //         _publicValues,
+    //         (PublicValuesStruct)
+    //     );
+    //     // TODO: Fix the return type
+    //     return true;
+    // }
 }
