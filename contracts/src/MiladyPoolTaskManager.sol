@@ -124,6 +124,11 @@ contract MiladyPoolTaskManager is
         );
 
         (
+            // TODO: Probably need some of this...
+            // One is to check the direction of the trade
+            // Another is to call this with permit2 instead
+            // of the way we are doing it now (which has no
+            // actual assets lmao)
             address walletAddress,
             int24 tickToSellAt,
             bool zeroForOne,
