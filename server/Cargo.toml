@@ -1,0 +1,8 @@
+[package]
+version = "0.1.0"
+name = "server"
+edition = "2021"
+
+[[bin]]
+name = "server"
+path = "bin/main.rs"
