@@ -5,6 +5,7 @@ import LimitBox from '@/components/LimitBox'
 import SellBox from '@/components/SellBox'
 import BuyBox from '@/components/BuyBox'
 import Actions from '@/components/Actions'
+import OrderTable from '@/components/OrderTable'
 
 const Home = () => {
 	return (
@@ -29,6 +30,7 @@ const Home = () => {
 					<BuyBox />
 				</SwapBox>
 				<Actions />
+				<OrderTable />
 			</Container>
 		</>
 	)
