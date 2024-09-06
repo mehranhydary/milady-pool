@@ -18,11 +18,11 @@ path = "src/bin/vkey.rs"
 
 [dependencies]
 sp1-sdk = "1.1.0"
-serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
-serde = { version = "1.0", default-features = false, features = ["derive"] }
 clap = { version = "4.0", features = ["derive", "env"] }
 tracing = "0.1.40"
 hex = "0.4.3"
+serde = { workspace = true }
+serde_json = {workspace = true }
 alloy-sol-types = { workspace = true }
 ethereum-types = { workspace = true }
 milady-pool-lib = { path = "../lib" } 
