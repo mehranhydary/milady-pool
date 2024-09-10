@@ -1,0 +1,17 @@
+mutation CreateOrder($input: CreateOrderInput!) {
+	createOrder(input: $input) {
+		trader
+		tickToSellAt
+		zeroForOne
+		inputAmount
+		poolKey {
+			token0
+			token1
+			fee
+			tickSpacing
+			hooks
+		}
+		startTime
+		deadline
+	}
+}

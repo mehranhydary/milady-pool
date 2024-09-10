@@ -1,0 +1,21 @@
+query GetOrders {
+	orders {
+		id
+		trader
+		tickToSellAt
+		zeroForOne
+		tokenInput
+		inputAmount
+		outputAmount
+		poolKey {
+			token0
+			token1
+			fee
+			tickSpacing
+			hooks
+		}
+		permit2Signature
+		startTime
+		deadline
+	}
+}

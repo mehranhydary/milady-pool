@@ -2,9 +2,11 @@ import styled from 'styled-components'
 import { useState } from 'react'
 import { orders as sampleOrders } from '@/data/sample'
 
-const OrderTable = () => {
+const OrderTable = ({ orders }: { orders: any[] }) => {
+	// TODO: Have the orders... need to update and work with hashes as well (if we want)
+	console.log(orders.map((order) => order))
 	const [currentPage, setCurrentPage] = useState(1)
-	const ordersPerPage = 5
+	const ordersPerPage = 10
 
 	const indexOfLastOrder = currentPage * ordersPerPage
 	const indexOfFirstOrder = indexOfLastOrder - ordersPerPage

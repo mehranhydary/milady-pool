@@ -1,6 +1,13 @@
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 const Actions = () => {
+	const onCreateOrderClick = () => {
+		console.log('Create order button clicked')
+
+		toast.success('Order created')
+		// Add further logic to handle order creation here
+	}
 	return (
 		<Container>
 			<Top>
@@ -13,7 +20,10 @@ const Actions = () => {
 				</IncrementBox>
 			</Top>
 			<ButtonContainer>
-				<ActionButton>Connect wallet</ActionButton>
+				<ActionButton disabled>Connect wallet</ActionButton>
+				<ActionButton onClick={onCreateOrderClick}>
+					Create order
+				</ActionButton>
 			</ButtonContainer>
 		</Container>
 	)
@@ -41,17 +51,17 @@ const Top = styled.div`
 	padding: 0 16px;
 `
 
-const ActionButton = styled.button`
-	background-color: #0070f3;
-	color: white;
+const ActionButton = styled.button<{ disabled?: boolean }>`
+	background-color: ${({ disabled }) => (disabled ? '#ccc' : '#0070f3')};
+	color: ${({ disabled }) => (disabled ? '#666' : 'white')};
 	border: none;
 	padding: 8px 16px;
 	border-radius: 4px;
 	font-size: 16px;
-	cursor: pointer;
+	cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
 
 	&:hover {
-		background-color: #005bb5;
+		background-color: ${({ disabled }) => (disabled ? '#ccc' : '#005bb5')};
 	}
 `
 

@@ -22,7 +22,8 @@
 			"@/components/*": ["./src/components/*"],
 			"@/compound/*": ["./src/compound/*"],
 			"@/lib/*": ["./src/lib/*"],
-			"@/utils/*": ["./src/utils/*"]
+			"@/utils/*": ["./src/utils/*"],
+			"@/graphql/*": ["./src/graphql/*"]
 		},
 		"types": ["vitest/globals"],
 		"target": "es5",
