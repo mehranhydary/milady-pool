@@ -1,6 +1,10 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from '@/redux/hooks'
-import { fetchOrdersAction, selectOrders } from '@/redux/orders'
+import {
+	createOrderAction,
+	fetchOrdersAction,
+	selectOrders,
+} from '@/redux/orders'
 
 export const useOrders = () => {
 	const dispatch = useDispatch()
@@ -10,5 +14,9 @@ export const useOrders = () => {
 		dispatch(fetchOrdersAction({}))
 	}, [dispatch])
 
-	return orders
+	const createOrder = useCallback(async () => {
+		await dispatch(createOrderAction({}))
+	}, [dispatch])
+
+	return { orders, createOrder }
 }

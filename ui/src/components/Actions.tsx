@@ -1,10 +1,10 @@
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
-const Actions = () => {
-	const onCreateOrderClick = () => {
+const Actions = ({ createOrder }: { createOrder: () => Promise<void> }) => {
+	const onCreateOrderClick = async () => {
 		console.log('Create order button clicked')
-
+		await createOrder()
 		toast.success('Order created')
 		// Add further logic to handle order creation here
 	}

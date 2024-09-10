@@ -9,7 +9,7 @@ import OrderTable from '@/components/OrderTable'
 import { useOrders } from '@/hooks/useOrders'
 
 const Home = () => {
-	const orders = useOrders()
+	const { orders, createOrder } = useOrders()
 	return (
 		<>
 			<Head>
@@ -31,7 +31,7 @@ const Home = () => {
 					<SellBox />
 					<BuyBox />
 				</SwapBox>
-				<Actions />
+				<Actions createOrder={createOrder} />
 				<OrderTable orders={orders} />
 			</Container>
 		</>
