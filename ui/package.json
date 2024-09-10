@@ -19,6 +19,7 @@
 		"@styled-icons/ionicons-outline": "^10.46.0",
 		"@styled-icons/ionicons-sharp": "^10.46.0",
 		"@styled-icons/material-sharp": "^10.47.0",
+		"@tanstack/react-query": "^5.55.4",
 		"cleave.js": "^1.6.0",
 		"color": "^4.2.3",
 		"fabric": "^5.4.0",
@@ -42,6 +43,7 @@
 		"sass": "^1.70.0",
 		"styled-components": "5.3.3",
 		"styled-icons": "^10.47.1",
+		"wagmi": "^2.12.9",
 		"ws": "^8.18.0"
 	},
 	"devDependencies": {
