@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import { SwapVertical } from '@styled-icons/ionicons-outline/SwapVertical'
 import Image from 'next/image'
+import { useState } from 'react'
 
 const LimitBox = () => {
 	return (
@@ -48,16 +49,43 @@ const MiddleSection = () => (
 	</Middle>
 )
 
-const BottomSection = () => (
-	<Bottom>
-		<IncrementBox>
-			<Increment selected>Market</Increment>
-			<Increment selected={false}>+1%</Increment>
-			<Increment selected={false}>+5%</Increment>
-			<Increment selected={false}>+10%</Increment>
-		</IncrementBox>
-	</Bottom>
-)
+const BottomSection = () => {
+	const [selectedIncrement, setSelectedIncrement] = useState('Market')
+
+	const handleIncrementClick = (increment: string) => {
+		setSelectedIncrement(increment)
+	}
+	return (
+		<Bottom>
+			<IncrementBox>
+				<Increment
+					selected={selectedIncrement === 'Market'}
+					onClick={() => handleIncrementClick('Market')}
+				>
+					Market
+				</Increment>
+				<Increment
+					selected={selectedIncrement === '+1%'}
+					onClick={() => handleIncrementClick('+1%')}
+				>
+					+1%
+				</Increment>
+				<Increment
+					selected={selectedIncrement === '+5%'}
+					onClick={() => handleIncrementClick('+5%')}
+				>
+					+5%
+				</Increment>
+				<Increment
+					selected={selectedIncrement === '+10%'}
+					onClick={() => handleIncrementClick('+10%')}
+				>
+					+10%
+				</Increment>
+			</IncrementBox>
+		</Bottom>
+	)
+}
 
 export default LimitBox
 
