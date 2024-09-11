@@ -54,10 +54,10 @@ forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --p
 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v
 ```
 
-2. Run `cd operator` to change into the AVS server folder
-3. Run `yarn` to install all dependencies
-4. Run `cp .env.example .env` and update your `.env` accordingly
-5.
+7. Next, start the operator. Run `cd operator` to change into the AVS server folder
+8. Run `yarn` to install all dependencies
+9. Run `cp .env.example .env` and update your `.env` accordingly
+10. ...
 
 ```
 
