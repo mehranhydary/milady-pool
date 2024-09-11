@@ -2,6 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
+import {Hooks} from "v4-core/libraries/Hooks.sol";
 
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
@@ -27,14 +28,23 @@ import {IMiladyPoolTaskManager} from "../src/interfaces/IMiladyPoolTaskManager.s
 import "../src/ERC20Mock.sol";
 
 import {Utils} from "./utils/Utils.sol";
+import {HookMiner} from "./utils/HookMiner.sol";
 
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
+import "forge-std/console2.sol";
 
 contract MiladyPoolDeployer is Script, Utils {
     // TODO: Constants that we may need should be defined here
+    address constant CREATE2_DEPLOYER =
+        address(0x4e59b44847b379578588920cA78FbF26c0B4956C);
+
+    // TODO: Replace with actual pool manager
+    address constant POOL_MANAGER = address(0x123);
+
+    function setUp() public {}
 
     // ERC20 and Strategy: we need to deploy this erc20, create a strategy for it, and whitelist this strategy in the strategymanager
     ERC20Mock public erc20Mock;
@@ -108,12 +118,14 @@ contract MiladyPoolDeployer is Script, Utils {
         address miladyPoolPauser = msg.sender;
 
         vm.startBroadcast();
+        console.log("Starting deployment");
         _deployErc20AndStrategyAndWhitelistStrategy(
             eigenLayerProxyAdmin,
             eigenLayerPauserReg,
             baseStrategyImplementation,
             strategyManager
         );
+        console.log("Deployed; ERC20 and Strategy");
         _deployMiladyPoolContracts(
             delegationManager,
             avsDirectory,
@@ -131,8 +143,37 @@ contract MiladyPoolDeployer is Script, Utils {
         IStrategyManager strategyManager
     ) internal {
         erc20Mock = new ERC20Mock();
+        console.log("Deployed ERC20Mock");
         // TODO(samlaf): any reason why we are using the strategybase with tvl limits instead of just using strategybase?
         // the maxPerDeposit and maxDeposits below are just arbitrary values.
+        console2.log("ERC20Mock address:", address(erc20Mock));
+        console2.log(
+            "BaseStrategyImplementation address:",
+            address(baseStrategyImplementation)
+        );
+        console2.log(
+            "EigenLayerProxyAdmin address:",
+            address(eigenLayerProxyAdmin)
+        );
+        console2.log(
+            "EigenLayerPauserReg address:",
+            address(eigenLayerPauserReg)
+        );
+
+        console2.log("ERC20Mock code?:", address(erc20Mock).code.length);
+        console2.log(
+            "BaseStrategyImplementation code?:",
+            address(baseStrategyImplementation).code.length
+        );
+        console2.log(
+            "EigenLayerProxyAdmin code?:",
+            address(eigenLayerProxyAdmin).code.length
+        );
+        console2.log(
+            "EigenLayerPauserReg code?:",
+            address(eigenLayerPauserReg).code.length
+        );
+
         erc20MockStrategy = StrategyBaseTVLLimits(
             address(
                 new TransparentUpgradeableProxy(
@@ -148,6 +189,7 @@ contract MiladyPoolDeployer is Script, Utils {
                 )
             )
         );
+        console.log("Deployed StrategyBaseTVLLimits");
         IStrategy[] memory strats = new IStrategy[](1);
         strats[0] = erc20MockStrategy;
         bool[] memory thirdPartyTransfersForbiddenValues = new bool[](1);
@@ -358,10 +400,33 @@ contract MiladyPoolDeployer is Script, Utils {
         );
 
         // TODO: Initalize this correctly (see variables in MiladyPoolTaskManager)
-        miladyPoolTaskManagerImplementation = new MiladyPoolTaskManager(
+        uint160 flags = uint160(
+            Hooks.AFTER_INITIALIZE_FLAG |
+                Hooks.BEFORE_SWAP_FLAG |
+                Hooks.AFTER_SWAP_FLAG
+        );
+
+        (address hookAddress, bytes32 salt) = HookMiner.find(
+            CREATE2_DEPLOYER,
+            flags,
+            type(MiladyPoolTaskManager).creationCode,
+            abi.encode(
+                registryCoordinator,
+                IPoolManager(POOL_MANAGER),
+                address(0) // verifier
+            )
+        );
+        miladyPoolTaskManagerImplementation = new MiladyPoolTaskManager{
+            salt: salt
+        }(
             registryCoordinator,
-            IPoolManager(address(0)), // Should be Uniswap Pool Manager
+            IPoolManager(POOL_MANAGER),
             address(0) // Should be Verifier
+        );
+
+        require(
+            address(miladyPoolTaskManagerImplementation) == hookAddress,
+            "Hook address does not match"
         );
 
         miladyPoolProxyAdmin.upgradeAndCall(
@@ -434,6 +499,6 @@ contract MiladyPoolDeployer is Script, Utils {
             deployed_addresses_output
         );
 
-        writeOutput(finalJson, "credible_squaring_avs_deployment_output");
+        writeOutput(finalJson, "milady_pool_avs_deployment_output");
     }
 }
