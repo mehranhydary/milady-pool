@@ -378,9 +378,9 @@ contract MiladyPoolDeployer is Script, Utils {
 
         // TODO: Initalize this correctly (see variables in MiladyPoolTaskManager)
         uint160 flags = uint160(
-            // Hooks.BEFORE_SWAP_RETURNS_DELTA_FLAG |
-            //     Hooks.AFTER_SWAP_RETURNS_DELTA_FLAG
             Hooks.AFTER_INITIALIZE_FLAG |
+                Hooks.BEFORE_SWAP_FLAG |
+                Hooks.AFTER_SWAP_FLAG |
                 Hooks.BEFORE_SWAP_RETURNS_DELTA_FLAG |
                 Hooks.AFTER_SWAP_FLAG
         );
