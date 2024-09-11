@@ -122,12 +122,12 @@ contract MiladyPoolDeployer is Script, Utils {
 
         vm.startBroadcast();
         console.log("Starting deployment");
-        // _deployErc20AndStrategyAndWhitelistStrategy(
-        //     eigenLayerProxyAdmin,
-        //     eigenLayerPauserReg,
-        //     baseStrategyImplementation,
-        //     strategyManager
-        // );
+        _deployErc20AndStrategyAndWhitelistStrategy(
+            eigenLayerProxyAdmin,
+            eigenLayerPauserReg,
+            baseStrategyImplementation,
+            strategyManager
+        );
         console.log("Deployed; ERC20 and Strategy");
         _deployMiladyPoolContracts(
             delegationManager,

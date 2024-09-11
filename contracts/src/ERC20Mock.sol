@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -32,12 +31,14 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20Mock is Context, IERC20 {
+contract ERC20Mock is ERC20 {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
+
+    constructor() ERC20("MiladyPoolToken", "MP") {}
 
     /**
      * @dev See {IERC20-totalSupply}.
@@ -146,7 +147,7 @@ contract ERC20Mock is Context, IERC20 {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {
+    ) internal override {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
@@ -177,7 +178,7 @@ contract ERC20Mock is Context, IERC20 {
      *
      * - `account` cannot be the zero address.
      */
-    function _mint(address account, uint256 amount) internal virtual {
+    function _mint(address account, uint256 amount) internal override {
         require(account != address(0), "ERC20: mint to the zero address");
 
         _totalSupply += amount;
@@ -199,7 +200,7 @@ contract ERC20Mock is Context, IERC20 {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 amount) internal virtual {
+    function _burn(address account, uint256 amount) internal override {
         require(account != address(0), "ERC20: burn from the zero address");
 
         _beforeTokenTransfer(account, address(0), amount);
@@ -234,7 +235,7 @@ contract ERC20Mock is Context, IERC20 {
         address owner,
         address spender,
         uint256 amount
-    ) internal virtual {
+    ) internal override {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -254,7 +255,7 @@ contract ERC20Mock is Context, IERC20 {
         address owner,
         address spender,
         uint256 amount
-    ) internal virtual {
+    ) internal override {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             require(
@@ -282,7 +283,7 @@ contract ERC20Mock is Context, IERC20 {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {}
+    ) internal override {}
 
     /**
      * @dev Hook that is called after any transfer of tokens. This includes
@@ -302,5 +303,5 @@ contract ERC20Mock is Context, IERC20 {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {}
+    ) internal override {}
 }
