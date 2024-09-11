@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
+import {PoolManager} from "v4-core/PoolManager.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 
@@ -42,7 +43,9 @@ contract MiladyPoolDeployer is Script, Utils {
         address(0x4e59b44847b379578588920cA78FbF26c0B4956C);
 
     // TODO: Replace with actual pool manager
-    address constant POOL_MANAGER = address(0x123);
+    // IPoolManager POOL_MANAGER = _deployPoolManager();
+    IPoolManager POOL_MANAGER =
+        IPoolManager(address(0xc5a5C42992dECbae36851359345FE25997F5C42d));
 
     function setUp() public {}
 
@@ -119,12 +122,12 @@ contract MiladyPoolDeployer is Script, Utils {
 
         vm.startBroadcast();
         console.log("Starting deployment");
-        _deployErc20AndStrategyAndWhitelistStrategy(
-            eigenLayerProxyAdmin,
-            eigenLayerPauserReg,
-            baseStrategyImplementation,
-            strategyManager
-        );
+        // _deployErc20AndStrategyAndWhitelistStrategy(
+        //     eigenLayerProxyAdmin,
+        //     eigenLayerPauserReg,
+        //     baseStrategyImplementation,
+        //     strategyManager
+        // );
         console.log("Deployed; ERC20 and Strategy");
         _deployMiladyPoolContracts(
             delegationManager,
@@ -136,6 +139,10 @@ contract MiladyPoolDeployer is Script, Utils {
         vm.stopBroadcast();
     }
 
+    function _deployPoolManager() internal returns (IPoolManager) {
+        return IPoolManager(address(new PoolManager(0)));
+    }
+
     function _deployErc20AndStrategyAndWhitelistStrategy(
         ProxyAdmin eigenLayerProxyAdmin,
         PauserRegistry eigenLayerPauserReg,
@@ -143,36 +150,6 @@ contract MiladyPoolDeployer is Script, Utils {
         IStrategyManager strategyManager
     ) internal {
         erc20Mock = new ERC20Mock();
-        console.log("Deployed ERC20Mock");
-        // TODO(samlaf): any reason why we are using the strategybase with tvl limits instead of just using strategybase?
-        // the maxPerDeposit and maxDeposits below are just arbitrary values.
-        console2.log("ERC20Mock address:", address(erc20Mock));
-        console2.log(
-            "BaseStrategyImplementation address:",
-            address(baseStrategyImplementation)
-        );
-        console2.log(
-            "EigenLayerProxyAdmin address:",
-            address(eigenLayerProxyAdmin)
-        );
-        console2.log(
-            "EigenLayerPauserReg address:",
-            address(eigenLayerPauserReg)
-        );
-
-        console2.log("ERC20Mock code?:", address(erc20Mock).code.length);
-        console2.log(
-            "BaseStrategyImplementation code?:",
-            address(baseStrategyImplementation).code.length
-        );
-        console2.log(
-            "EigenLayerProxyAdmin code?:",
-            address(eigenLayerProxyAdmin).code.length
-        );
-        console2.log(
-            "EigenLayerPauserReg code?:",
-            address(eigenLayerPauserReg).code.length
-        );
 
         erc20MockStrategy = StrategyBaseTVLLimits(
             address(
@@ -401,8 +378,10 @@ contract MiladyPoolDeployer is Script, Utils {
 
         // TODO: Initalize this correctly (see variables in MiladyPoolTaskManager)
         uint160 flags = uint160(
+            // Hooks.BEFORE_SWAP_RETURNS_DELTA_FLAG |
+            //     Hooks.AFTER_SWAP_RETURNS_DELTA_FLAG
             Hooks.AFTER_INITIALIZE_FLAG |
-                Hooks.BEFORE_SWAP_FLAG |
+                Hooks.BEFORE_SWAP_RETURNS_DELTA_FLAG |
                 Hooks.AFTER_SWAP_FLAG
         );
 
@@ -412,15 +391,16 @@ contract MiladyPoolDeployer is Script, Utils {
             type(MiladyPoolTaskManager).creationCode,
             abi.encode(
                 registryCoordinator,
-                IPoolManager(POOL_MANAGER),
+                POOL_MANAGER,
                 address(0) // verifier
             )
         );
+
         miladyPoolTaskManagerImplementation = new MiladyPoolTaskManager{
             salt: salt
         }(
             registryCoordinator,
-            IPoolManager(POOL_MANAGER),
+            POOL_MANAGER,
             address(0) // Should be Verifier
         );
 
@@ -437,8 +417,11 @@ contract MiladyPoolDeployer is Script, Utils {
             abi.encodeWithSelector(
                 miladyPoolTaskManager.initialize.selector,
                 miladyPoolPauserReg,
-                miladyPoolCommunityMultisig
-                // TODO: Come back to these two
+                miladyPoolCommunityMultisig,
+                // TODO: Come back to this and put the actual vkey here for Succinct
+                bytes32(
+                    0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+                )
             )
         );
 

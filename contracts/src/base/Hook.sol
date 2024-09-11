@@ -48,7 +48,7 @@ abstract contract Hook is BaseHook, Verification {
                 afterAddLiquidity: false,
                 beforeRemoveLiquidity: false,
                 afterRemoveLiquidity: false,
-                beforeSwap: true,
+                beforeSwap: false,
                 afterSwap: true,
                 beforeDonate: false,
                 afterDonate: false,

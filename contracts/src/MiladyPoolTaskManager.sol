@@ -35,11 +35,6 @@ contract MiladyPoolTaskManager is
 {
     using BN254 for BN254.G1Point;
 
-    // TODO: Do we need order response / challenge times?
-    // uint32 public immutable TASK_RESPONSE_WINDOW_BLOCK;
-    // uint32 public constant TASK_CHALLENGE_WINDOW_BLOCK = 100;
-    // uint256 internal constant _THRESHOLD_DENOMINATOR = 100;
-
     constructor(
         IRegistryCoordinator _registryCoordinator,
         IPoolManager _poolManager,
@@ -80,37 +75,37 @@ contract MiladyPoolTaskManager is
         emit OrderCancelled(_proofBytes);
     }
 
-    function beforeSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        bytes calldata data
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
-        if (data.length == 0)
-            return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
-        (
-            bytes4 selector,
-            BeforeSwapDelta delta,
-            // TODO: Figure out what this is
-            uint24 lpFeeOverride,
-            bytes memory proofBytes
-        ) = _beforeSwap(sender, key, params, data);
-        emit OrderFulfilled(proofBytes);
-        return (selector, delta, lpFeeOverride);
-    }
+    // function beforeSwap(
+    //     address sender,
+    //     PoolKey calldata key,
+    //     IPoolManager.SwapParams calldata params,
+    //     bytes calldata data
+    // ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    //     if (data.length == 0)
+    //         return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
+    //     (
+    //         bytes4 selector,
+    //         BeforeSwapDelta delta,
+    //         // TODO: Figure out what this is
+    //         uint24 lpFeeOverride,
+    //         bytes memory proofBytes
+    //     ) = _beforeSwap(sender, key, params, data);
+    //     emit OrderFulfilled(proofBytes);
+    //     return (selector, delta, lpFeeOverride);
+    // }
 
-    function afterSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        BalanceDelta delta,
-        bytes calldata data
-    ) external override onlyByPoolManager returns (bytes4, int128) {
-        if (sender == address(this)) return (this.afterSwap.selector, 0);
-        int24 currentTick = _afterSwap(sender, key, params, delta, data);
-        emit TickUpdated(currentTick);
-        return (this.afterSwap.selector, 0);
-    }
+    // function afterSwap(
+    //     address sender,
+    //     PoolKey calldata key,
+    //     IPoolManager.SwapParams calldata params,
+    //     BalanceDelta delta,
+    //     bytes calldata data
+    // ) external override onlyByPoolManager returns (bytes4, int128) {
+    //     if (sender == address(this)) return (this.afterSwap.selector, 0);
+    //     int24 currentTick = _afterSwap(sender, key, params, delta, data);
+    //     emit TickUpdated(currentTick);
+    //     return (this.afterSwap.selector, 0);
+    // }
 
     function getLowerUsableTick(
         int24 tick,

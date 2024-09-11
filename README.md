@@ -37,12 +37,12 @@ Instructions to manually run Milady Pool are listed below. Please note that this
 4. Start anvil by opening another terminal and running `anvil`
 5. In another terminal, deploy Eigenlayer contracts
 
-Change into `contracts/lib/eigenlayer-middleware/lib/eigenlayer-contracts` and run the following commands
+Change into `contracts/lib/eigenlayer-contracts` and run the following commands (the other one is old (in eigenlayer-middleware/lib/eigenlayer-contracts))
 
 ```sh
-forge script script/deploy/M2_Deploy_From_Scratch.s.sol --rpc-url http://localhost:8545 \
+forge script script/deploy/local/Deploy_From_Scratch.s.sol --rpc-url http://localhost:8545 \
 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast \
---sig "run(string memory configFile)" -- M2_deploy_from_scratch.anvil.config.json
+--sig "run(string memory configFile)" -- local/deploy_from_scratch.anvil.config.json
 ```
 
 6. In another terminal deploy Milady Pool contracts
@@ -51,7 +51,7 @@ forge script script/deploy/M2_Deploy_From_Scratch.s.sol --rpc-url http://localho
 cd contracts
 
 forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --private-key \
-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v
+0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
 ```
 
 7. Next, start the operator. Run `cd operator` to change into the AVS server folder
