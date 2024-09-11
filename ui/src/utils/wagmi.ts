@@ -5,7 +5,10 @@ import { injected, metaMask } from 'wagmi/connectors'
 // TODO: Add your private networks
 export const config = createConfig({
 	chains: [base, mainnet],
-	connectors: [injected(), metaMask()],
+	connectors: [
+		// injected(),
+		metaMask(),
+	],
 	transports: {
 		[mainnet.id]: http(),
 		[base.id]: http(),

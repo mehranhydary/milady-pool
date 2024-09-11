@@ -6,14 +6,11 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 	// TODO: Have the orders... need to update and work with hashes as well (if we want)
 	console.log(orders.map((order) => order))
 	const [currentPage, setCurrentPage] = useState(1)
-	const ordersPerPage = 10
+	const ordersPerPage = 5
 
 	const indexOfLastOrder = currentPage * ordersPerPage
 	const indexOfFirstOrder = indexOfLastOrder - ordersPerPage
-	const currentOrders = sampleOrders.slice(
-		indexOfFirstOrder,
-		indexOfLastOrder
-	)
+	const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder)
 
 	const paginate = (pageNumber: number) => {
 		if (pageNumber < 1) {
@@ -28,7 +25,7 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 		return `${hash.slice(0, 6)}...${hash.slice(-4)}`
 	}
 
-	const totalPages = Math.ceil(sampleOrders.length / ordersPerPage)
+	const totalPages = Math.ceil(orders.length / ordersPerPage)
 
 	return (
 		<>
@@ -47,11 +44,11 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 					</Tr>
 				</thead>
 				<tbody>
-					{currentOrders.map((order) => (
-						<Tr key={order.hash}>
-							<Td>{shortenHash(order.hash)}</Td>
-							<Td>{order.date}</Td>
-							<Td>{order.completed ? '✔️' : ''}</Td>
+					{currentOrders.map((order, index) => (
+						<Tr key={sampleOrders[index].hash}>
+							<Td>{shortenHash(sampleOrders[index].hash)}</Td>
+							<Td>{order.startTime}</Td>
+							<Td>{sampleOrders[index].completed ? '✔️' : ''}</Td>
 						</Tr>
 					))}
 				</tbody>

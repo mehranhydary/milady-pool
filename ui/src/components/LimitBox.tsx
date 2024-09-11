@@ -34,20 +34,27 @@ const TopSection = () => (
 	</Top>
 )
 
-const MiddleSection = () => (
-	<Middle>
-		<StyledTextInput value={2391.77} />
-		<CoinCapsule>
-			<CoinLogo
-				src={'/images/logos/eth-logo.png'}
-				alt='ETH Logo'
-				width={18}
-				height={18}
-			/>
-			<CoinSymbol>ETH</CoinSymbol>
-		</CoinCapsule>
-	</Middle>
-)
+const MiddleSection = () => {
+	const [value, setValue] = useState('2391.77')
+
+	const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setValue(event.target.value)
+	}
+	return (
+		<Middle>
+			<StyledTextInput value={value} onChange={handleValueChange} />
+			<CoinCapsule>
+				<CoinLogo
+					src={'/images/logos/eth-logo.png'}
+					alt='ETH Logo'
+					width={18}
+					height={18}
+				/>
+				<CoinSymbol>ETH</CoinSymbol>
+			</CoinCapsule>
+		</Middle>
+	)
+}
 
 const BottomSection = () => {
 	const [selectedIncrement, setSelectedIncrement] = useState('Market')

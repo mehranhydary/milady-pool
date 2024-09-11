@@ -24,6 +24,7 @@
 		"copyfiles": "^2.4.1",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
+		"ethers": "^6.13.2",
 		"express": "^4.19.2",
 		"graphql": "^16.9.0",
 		"graphql-tag": "^2.12.6",

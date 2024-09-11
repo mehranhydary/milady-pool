@@ -22,10 +22,6 @@ const Actions = ({ createOrder }: { createOrder: () => Promise<void> }) => {
 		// Add further logic to handle order creation here
 	}
 
-	const shortenAddress = (address: string) => {
-		if (!address) return ''
-		return `${address.slice(0, 6)}...${address.slice(-4)}`
-	}
 	return (
 		<Container>
 			<Top>
@@ -58,40 +54,6 @@ const Actions = ({ createOrder }: { createOrder: () => Promise<void> }) => {
 				</IncrementBox>
 			</Top>
 			<ButtonContainer>
-				{address ? (
-					<EthAddressContainer>
-						<EthAddress>
-							{shortenAddress(address)}
-							{balance && (
-								<Balance>
-									Balance: {balance.formatted}{' '}
-									{balance.symbol}
-								</Balance>
-							)}
-						</EthAddress>
-						<ActionButton onClick={() => disconnect()}>
-							Disconnect
-						</ActionButton>
-					</EthAddressContainer>
-				) : (
-					connectors.map((connector) => (
-						<ActionButton
-							key={connector.uid}
-							onClick={() => connect({ connector })}
-						>
-							{connector.icon && (
-								<Image
-									src={connector.icon}
-									width={20}
-									height={20}
-									alt={`${connector.name} icon`}
-								/>
-							)}
-							{connector.name}
-						</ActionButton>
-					))
-				)}
-
 				<ActionButton onClick={onCreateOrderClick}>
 					Create order
 				</ActionButton>
@@ -171,27 +133,4 @@ const ButtonContainer = styled.div`
 	flex-direction: column;
 	width: 100%;
 	gap: 8px;
-`
-
-const EthAddressContainer = styled.div`
-	display: flex;
-	align-items: center;
-	gap: 8px;
-`
-
-const EthAddress = styled.div`
-	background-color: #f0f0f0;
-	color: #333;
-	border: 1px solid #ccc;
-	padding: 8px 16px;
-	border-radius: 4px;
-	font-size: 14px;
-	text-align: center;
-	word-break: break-all;
-`
-
-const Balance = styled.div`
-	font-size: 12px;
-	color: #666;
-	margin-top: 4px;
 `

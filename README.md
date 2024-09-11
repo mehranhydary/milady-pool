@@ -1,99 +1,64 @@
 # Milady Pool
 
-Users of a dark pool cannot see open orders of others. It is a private platform where users can buy or sell significant amounts of assets without disclosing their intentions to a wider market. Dark pools provide a discreet system to institutional players so that their strategies or trades are kept secret.
+Milady Pool is a dark pool, a private platform where users trade crypto without disclosing intentions to a wider market.
 
-# Users:
+## Archtecture
 
-This protocol is for institutions looking to facilitate large trades through a private protocol.
+This app has 4 parts.
 
-# Pros:
+1. UI
+2. AVS
+3. Contracts
+4. ZKP
 
-1. Improved liquidity for large orders
-2. Access to diverse participants
-3. Enhanced privacy and reduced market impact
-4. Reduced transaction costs
+### User Interface
 
-# Cons:
+The user interface is stored in the `/ui` folder. It is a Next JS app. Milady Pool uses a single page app for users to create and view orders. As a user, you can connect your wallet and create private orders using the user interface.
 
-1. Potential for market manipulation
-2. Regulatory concerns
-3. Limited price discovery
-4. Lack of transparency
+### Actively Validated Service
 
-# Learn more:
+The actively validated service (AVS) is responsible for storing, processing, and submitting private orders. It is a Node JS app with a GraphQL API. When orders are created, they are stored in a Postgresql database. The Node JS app also has contract listeners. As events are emitted from the chain the Milady Pool contracts are deployed to, the Node JS app is responsible for processing and submitting relevant orders based on the event.
 
-https://concordexlabs.medium.com/understanding-dark-pools-cryptos-hidden-trading-ecosystem-b2c11135f6f3
-https://www.investopedia.com/articles/markets/050614/introduction-dark-pools.asp
-https://docs.renegade.fi/core-concepts/dark-pool-explainer
-https://chatgpt.com/c/3c519810-d772-4a26-82a4-3d7e8da371bb
+### Contracts
 
-# Todo:
+A contract called `MiladyPoolTaskManager` was designed as a Uniswap V4 hook that can process limit orders from the Milady Pool AVS.
 
-1. Ensure that the dark pool created through Milady Pool complies with the stringent regularity requirements similar to those imposed on traditional stock exchanges. This includes the necessity to register with the Securities and Exchange Comission (SEC) and provide specific information about the operations of this protocol.
+### ZKP
 
-## Foundry
+TBD
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Getting started
 
-Foundry consists of:
+Instructions to manually run Milady Pool are listed below. Please note that this code should only be used for testing and should not be used in production.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+1. To get started, we will prepare the contracts
+2. Run `cd contracts && cp .env.example .env`
+3. Run `forge build`
+4. Start anvil by opening another terminal and running `anvil`
+5. In another terminal, deploy Eigenlayer contracts
 
-## Documentation
+Change into `contracts/lib/eigenlayer-middleware/lib/eigenlayer-contracts` and run the following commands
 
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
+```sh
+forge script script/deploy/devnet/M2_Deploy_From_Scratch.s.sol --rpc-url http://localhost:8545 \
+--private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast \
+--sig "run(string memory configFile)" -- M2_deploy_from_scratch.anvil.config.json
 ```
 
-### Test
+6. In another terminal deploy Milady Pool contracts
 
-```shell
-$ forge test
+```sh
+cd contracts
+
+forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --private-key \
+0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v
 ```
 
-### Format
+2. Run `cd operator` to change into the AVS server folder
+3. Run `yarn` to install all dependencies
+4. Run `cp .env.example .env` and update your `.env` accordingly
+5.
 
-```shell
-$ forge fmt
 ```
 
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
 ```
