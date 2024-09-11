@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
+import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
+
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 import "@eigenlayer/contracts/permissions/PauserRegistry.sol";
@@ -23,6 +25,8 @@ import {MiladyPoolTaskManager} from "../src/MiladyPoolTaskManager.sol";
 import {IMiladyPoolTaskManager} from "../src/interfaces/IMiladyPoolTaskManager.sol";
 // TODO: Figure out why we need an ERC20Mock.sol...
 import "../src/ERC20Mock.sol";
+
+import {Utils} from "./utils/Utils.sol";
 
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
@@ -169,7 +173,7 @@ contract MiladyPoolDeployer is Script, Utils {
             address[] memory pausers = new address[](2);
             pausers[0] = miladyPoolPauser;
             pausers[1] = miladyPoolCommunityMultisig;
-            helloWorldPauserReg = new PauserRegistry(
+            miladyPoolPauserReg = new PauserRegistry(
                 pausers,
                 miladyPoolCommunityMultisig
             );
@@ -272,9 +276,9 @@ contract MiladyPoolDeployer is Script, Utils {
 
         registryCoordinatorImplementation = new regCoord.RegistryCoordinator(
             miladyPoolServiceManager,
-            regcoord.IStakeRegistry(address(stakeRegistry)),
-            regcoord.IBLSApkRegistry(address(blsApkRegistry)),
-            regcoord.IIndexRegistry(address(indexRegistry))
+            regCoord.IStakeRegistry(address(stakeRegistry)),
+            regCoord.IBLSApkRegistry(address(blsApkRegistry)),
+            regCoord.IIndexRegistry(address(indexRegistry))
         );
 
         {
@@ -304,7 +308,7 @@ contract MiladyPoolDeployer is Script, Utils {
                 );
 
             for (uint i = 0; i < numQuorums; i++) {
-                quorumStrategyParams[i] = new IStakeRegistry.StrategyParams[][](
+                quorumsStrategyParams[i] = new IStakeRegistry.StrategyParams[](
                     numStrategies
                 );
                 for (uint j = 0; j < numStrategies; j++) {
@@ -325,12 +329,12 @@ contract MiladyPoolDeployer is Script, Utils {
                 ),
                 address(registryCoordinatorImplementation),
                 abi.encodeWithSelector(
-                    regcoord.RegistryCoordinator.initialize.selector,
+                    regCoord.RegistryCoordinator.initialize.selector,
                     // we set churnApprover and ejector to communityMultisig because we don't need them
-                    incredibleSquaringCommunityMultisig,
-                    incredibleSquaringCommunityMultisig,
-                    incredibleSquaringCommunityMultisig,
-                    incredibleSquaringPauserReg,
+                    miladyPoolCommunityMultisig,
+                    miladyPoolCommunityMultisig,
+                    miladyPoolCommunityMultisig,
+                    miladyPoolPauserReg,
                     0, // 0 initialPausedStatus means everything unpaused
                     quorumsOperatorSetParams,
                     quorumsMinimumStake,
@@ -356,7 +360,8 @@ contract MiladyPoolDeployer is Script, Utils {
         // TODO: Initalize this correctly (see variables in MiladyPoolTaskManager)
         miladyPoolTaskManagerImplementation = new MiladyPoolTaskManager(
             registryCoordinator,
-            miladyPoolServiceManager
+            IPoolManager(address(0)), // Should be Uniswap Pool Manager
+            address(0) // Should be Verifier
         );
 
         miladyPoolProxyAdmin.upgradeAndCall(
@@ -367,11 +372,68 @@ contract MiladyPoolDeployer is Script, Utils {
             abi.encodeWithSelector(
                 miladyPoolTaskManager.initialize.selector,
                 miladyPoolPauserReg,
-                miladyPoolCommunityMultisig,
+                miladyPoolCommunityMultisig
                 // TODO: Come back to these two
-                AGGREGATOR_ADDR,
-                TASK_GENERATOR_ADDR
             )
         );
+
+        // WRITE JSON DATA
+        string memory parent_object = "parent object";
+
+        string memory deployed_addresses = "addresses";
+        vm.serializeAddress(
+            deployed_addresses,
+            "erc20Mock",
+            address(erc20Mock)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "erc20MockStrategy",
+            address(erc20MockStrategy)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "miladyPoolServiceManager",
+            address(miladyPoolServiceManager)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "miladyPoolServiceManagerImplementation",
+            address(miladyPoolServiceManagerImplementation)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "miladyPoolTaskManager",
+            address(miladyPoolTaskManager)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "miladyPoolTaskManagerImplementation",
+            address(miladyPoolTaskManagerImplementation)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "registryCoordinator",
+            address(registryCoordinator)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "registryCoordinatorImplementation",
+            address(registryCoordinatorImplementation)
+        );
+        string memory deployed_addresses_output = vm.serializeAddress(
+            deployed_addresses,
+            "operatorStateRetriever",
+            address(operatorStateRetriever)
+        );
+
+        // serialize all the data
+        string memory finalJson = vm.serializeString(
+            parent_object,
+            deployed_addresses,
+            deployed_addresses_output
+        );
+
+        writeOutput(finalJson, "credible_squaring_avs_deployment_output");
     }
 }
