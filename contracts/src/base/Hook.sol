@@ -14,11 +14,14 @@ import {Currency, CurrencyLibrary} from "v4-core/types/Currency.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
 import {WyvernInspired} from "./WyvernInspired.sol";
 import {PublicValuesStruct, Sig} from "./Structs.sol";
+import {ISignatureTransfer} from "permit2/src/interfaces/ISignatureTransfer.sol";
 
 abstract contract Hook is BaseHook, WyvernInspired {
     using StateLibrary for IPoolManager;
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
+
+    address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
     // TODO: Figure out if we need latest order id, order hashes, zkps, matching order ids, responses, challenges, etc.
     mapping(PoolId poolId => int24 lastTick) public lastTicks;
@@ -103,7 +106,9 @@ abstract contract Hook is BaseHook, WyvernInspired {
             uint24 fee,
             int24 tickSpacing,
             address hooks,
-            bytes32 permit2Signature
+            bytes memory permit2Signature,
+            uint256 permit2Nonce,
+            uint256 permit2Deadline
         ) = (
                 _publicValues.walletAddress,
                 _publicValues.tickToSellAt,
@@ -116,11 +121,41 @@ abstract contract Hook is BaseHook, WyvernInspired {
                 _publicValues.fee,
                 _publicValues.tickSpacing,
                 _publicValues.hooks,
-                _publicValues.permit2Signature
+                _publicValues.permit2Signature,
+                _publicValues.permit2Nonce,
+                _publicValues.permit2Deadline
             );
 
         // TODO: Refactor this section; not gonna work because
         // you have to activate the permit 2 signature
+        // Look here: https://blog.uniswap.org/permit2-integration-guide
+
+        // Use Permit2 to transfer tokens from the user to this contract
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer
+            .PermitTransferFrom({
+                permitted: ISignatureTransfer.TokenPermissions({
+                    token: tokenInput,
+                    amount: inputAmount
+                }),
+                nonce: permit2Nonce,
+                deadline: permit2Deadline
+            });
+
+        ISignatureTransfer.SignatureTransferDetails
+            memory transferDetails = ISignatureTransfer
+                .SignatureTransferDetails({
+                    to: address(this),
+                    requestedAmount: inputAmount
+                });
+
+        // Assuming PERMIT2 is a constant address of the Permit2 contract
+        ISignatureTransfer(PERMIT2).permitTransferFrom(
+            permit,
+            transferDetails,
+            walletAddress,
+            permit2Signature
+        );
+
         BalanceDelta delta = poolManager.swap(
             key,
             IPoolManager.SwapParams({

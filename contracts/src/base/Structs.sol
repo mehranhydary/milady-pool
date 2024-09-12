@@ -15,7 +15,9 @@ struct PublicValuesStruct {
     uint24 fee;
     int24 tickSpacing;
     address hooks; // Should be passed into IHooks interface
-    bytes32 permit2Signature;
+    bytes permit2Signature;
+    uint256 permit2Nonce;
+    uint256 permit2Deadline;
 }
 
 struct Sig {
