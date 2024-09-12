@@ -12,7 +12,7 @@ import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
 import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
 import {Currency, CurrencyLibrary} from "v4-core/types/Currency.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
-import {WyvernInspired} from "v4-core/src/base/WyvernInspired.sol";
+import {WyvernInspired} from "./WyvernInspired.sol";
 import {PublicValuesStruct, Sig} from "./Structs.sol";
 
 abstract contract Hook is BaseHook, WyvernInspired {
@@ -29,11 +29,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
     error NothingToClaim();
     error NotEnoughToClaim();
 
-    constructor(
-        IPoolManager _poolManager,
-        // SP1 contracts to verify public values
-        address _verifier
-    ) BaseHook(_poolManager) Verification(_verifier) {}
+    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
 
     function getHookPermissions()
         public
@@ -60,16 +56,12 @@ abstract contract Hook is BaseHook, WyvernInspired {
             });
     }
 
-    function afterInitialize(
-        address,
+    function _afterInitialize(
         PoolKey calldata key,
-        uint160,
-        int24 tick,
-        bytes calldata
-    ) external override onlyByPoolManager returns (bytes4) {
+        int24 tick
+    ) internal returns (int24) {
         lastTicks[key.toId()] = tick;
-        emit TickUpdated(tick);
-        return this.afterInitialize.selector;
+        return tick;
     }
 
     function _beforeSwap(
@@ -77,7 +69,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
         PoolKey calldata key,
         IPoolManager.SwapParams calldata,
         bytes calldata data
-    ) internal returns (bytes4, BeforeSwapDelta, uint24, bytes memory) {
+    ) internal returns (bytes4, BeforeSwapDelta, uint24) {
         (bytes memory publicValues, bytes memory sig) = abi.decode(
             data,
             (bytes, bytes)
@@ -167,16 +159,9 @@ abstract contract Hook is BaseHook, WyvernInspired {
             }
         }
 
-        pendingOrders[proofBytes] = false;
-
         // Return the appropriate values
         // TODO: Need to update toBeforeSwapDelta to handle token in and out amounts
-        return (
-            this.beforeSwap.selector,
-            toBeforeSwapDelta(0, 0),
-            0,
-            proofBytes
-        );
+        return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
     }
 
     function _afterSwap(

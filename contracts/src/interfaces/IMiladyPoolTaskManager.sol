@@ -15,8 +15,6 @@ interface IMiladyPoolTaskManager {
     // TODO: Add events for challenges (successful and unsuccessful)
 
     // TODO: Figure out what other structs you need here (look at Arena X, Uniswap X, etc.)
-    // Need functions
-    function createOrder(bytes calldata proofBytes) external;
-    function cancelOrder(bytes calldata proofBytes) external;
+
     // TODO: Look at Uniswap X and Arena X for inspiration
 }

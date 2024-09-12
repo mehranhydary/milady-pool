@@ -31,22 +31,33 @@ contract MiladyPoolTaskManager is
     BLSSignatureChecker,
     OperatorStateRetriever,
     IMiladyPoolTaskManager,
-    Hook,
+    Hook
 {
     using BN254 for BN254.G1Point;
 
     constructor(
         IRegistryCoordinator _registryCoordinator,
-        IPoolManager _poolManager,
-    ) BLSSignatureChecker(_registryCoordinator) Hook(_poolManager, _verifier) {
-    }
+        IPoolManager _poolManager
+    ) BLSSignatureChecker(_registryCoordinator) Hook(_poolManager) {}
 
     function initialize(
         IPauserRegistry _pauserRegistry,
-        address initialOwner,
+        address initialOwner
     ) public initializer {
         _initializePauser(_pauserRegistry, UNPAUSE_ALL);
         _transferOwnership(initialOwner);
+    }
+
+    function afterInitialize(
+        address,
+        PoolKey calldata key,
+        uint160,
+        int24 tick,
+        bytes calldata
+    ) external override onlyByPoolManager returns (bytes4) {
+        _afterInitialize(key, tick);
+        emit TickUpdated(tick);
+        return this.afterInitialize.selector;
     }
 
     function beforeSwap(
@@ -61,10 +72,10 @@ contract MiladyPoolTaskManager is
             bytes4 selector,
             BeforeSwapDelta delta,
             // TODO: Figure out what this is
-            uint24 lpFeeOverride,
-            bytes memory proofBytes
+            uint24 lpFeeOverride
         ) = _beforeSwap(sender, key, params, data);
-        emit OrderFulfilled(proofBytes);
+        // TODO: Come back to this to emit an event
+        // emit OrderFulfilled(proofBytes);
         return (selector, delta, lpFeeOverride);
     }
 

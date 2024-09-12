@@ -388,20 +388,12 @@ contract MiladyPoolDeployer is Script, Utils {
             CREATE2_DEPLOYER,
             flags,
             type(MiladyPoolTaskManager).creationCode,
-            abi.encode(
-                registryCoordinator,
-                POOL_MANAGER,
-                address(0) // verifier
-            )
+            abi.encode(registryCoordinator, POOL_MANAGER)
         );
 
         miladyPoolTaskManagerImplementation = new MiladyPoolTaskManager{
             salt: salt
-        }(
-            registryCoordinator,
-            POOL_MANAGER,
-            address(0) // Should be Verifier
-        );
+        }(registryCoordinator, POOL_MANAGER);
 
         require(
             address(miladyPoolTaskManagerImplementation) == hookAddress,

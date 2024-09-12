@@ -1,13 +1,13 @@
 {
   "addresses": {
-    "erc20Mock": "0x4EE6eCAD1c2Dae9f525404De8555724e3c35d07B",
-    "erc20MockStrategy": "0xBEc49fA140aCaA83533fB00A2BB19bDdd0290f25",
-    "miladyPoolServiceManager": "0xC9a43158891282A2B1475592D5719c001986Aaec",
-    "miladyPoolServiceManagerImplementation": "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
-    "miladyPoolTaskManager": "0x1c85638e118b37167e9298c2268758e058DdfDA0",
-    "miladyPoolTaskManagerImplementation": "0x530e6c6B1E5874F2962E0f40050B6BE3B35f90C8",
-    "operatorStateRetriever": "0x4631BCAbD6dF18D94796344963cB60d44a4136b6",
-    "registryCoordinator": "0x367761085BF3C12e5DA2Df99AC6E1a824612b8fb",
-    "registryCoordinatorImplementation": "0xe8D2A1E88c91DCd5433208d4152Cc4F399a7e91d"
+    "erc20Mock": "0xF8e31cb472bc70500f08Cd84917E5A1912Ec8397",
+    "erc20MockStrategy": "0xc0F115A19107322cFBf1cDBC7ea011C19EbDB4F8",
+    "miladyPoolServiceManager": "0x22753E4264FDDc6181dc7cce468904A80a363E44",
+    "miladyPoolServiceManagerImplementation": "0x5fc748f1FEb28d7b76fa1c6B07D8ba2d5535177c",
+    "miladyPoolTaskManager": "0xA7c59f010700930003b33aB25a7a0679C860f29c",
+    "miladyPoolTaskManagerImplementation": "0x73ff110Ec4CdA4F761e2d21C9FAdf293880B10C8",
+    "operatorStateRetriever": "0x5bf5b11053e734690269C6B9D438F8C9d48F528A",
+    "registryCoordinator": "0xfaAddC93baf78e89DCf37bA67943E1bE8F37Bb8c",
+    "registryCoordinatorImplementation": "0x525C7063E7C20997BaaE9bDa922159152D0e8417"
   }
 }

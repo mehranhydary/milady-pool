@@ -22,7 +22,7 @@ abstract contract WyvernInspired {
 
     function validateOrderParameters(
         PublicValuesStruct memory order
-    ) public view {
+    ) public view returns (bool) {
         return _validateOrderParameters(order);
     }
 
@@ -30,7 +30,8 @@ abstract contract WyvernInspired {
         PublicValuesStruct memory order,
         Sig memory sig
     ) public view returns (bool) {
-        return _validateOrder(order, sig);
+        bytes32 hash = _hashOrder(order);
+        return _validateOrder(hash, order, sig);
     }
 
     function cancelOrder(
@@ -62,7 +63,7 @@ abstract contract WyvernInspired {
         PublicValuesStruct memory order,
         Sig memory sig
     ) internal view returns (bytes32) {
-        bytes32 hash = _hashToSign(_publicValues);
+        bytes32 hash = _hashToSign(order);
         require(_validateOrder(hash, order, sig));
         return hash;
     }
@@ -70,17 +71,18 @@ abstract contract WyvernInspired {
     // TODO: May not need this for now but nice to have
     function _validateOrderParameters(
         PublicValuesStruct memory order
-    ) internal view {
-        require(order.walletAddress != address(0), "INVALID_ADDRESS");
-        require(order.tickToSellAt != 0, "INVALID_TICK");
-        require(order.inputAmount != 0, "INVALID_AMOUNT");
-        require(order.outputAmount != 0, "INVALID_AMOUNT");
-        require(order.tokenInput != address(0), "INVALID_ADDRESS");
-        require(order.token0 != address(0), "INVALID_ADDRESS");
-        require(order.token1 != address(0), "INVALID_ADDRESS");
-        require(order.fee != 0, "INVALID_FEE");
-        require(order.tickSpacing != 0, "INVALID_TICK_SPACING");
-        require(order.hooks != address(0), "INVALID_HOOKS");
+    ) internal view returns (bool) {
+        if (order.walletAddress == address(0)) return false;
+        if (order.tickToSellAt == 0) return false;
+        if (order.inputAmount == 0) return false;
+        if (order.outputAmount == 0) return false;
+        if (order.tokenInput == address(0)) return false;
+        if (order.token0 == address(0)) return false;
+        if (order.token1 == address(0)) return false;
+        if (order.fee == 0) return false;
+        if (order.tickSpacing == 0) return false;
+        if (order.hooks == address(0)) return false;
+        return true;
     }
 
     function _validateOrder(
@@ -88,7 +90,7 @@ abstract contract WyvernInspired {
         PublicValuesStruct memory order,
         Sig memory sig
     ) internal view returns (bool) {
-        if (!_validateOrderParameters(order)) {
+        if (!(_validateOrderParameters(order))) {
             return false;
         }
 
@@ -103,9 +105,12 @@ abstract contract WyvernInspired {
         return false;
     }
 
-    function _cancelOrder(PublicValuesStruct memory order) internal {
+    function _cancelOrder(
+        PublicValuesStruct memory order,
+        Sig memory sig
+    ) internal {
         bytes32 hash = _requireValidOrder(order, sig);
-        require(msg.sender = order.walletAddress, "INVALID_ADDRESS");
+        require(msg.sender == order.walletAddress, "INVALID_ADDRESS");
 
         cancelledOrFinalized[hash] = true;
 
