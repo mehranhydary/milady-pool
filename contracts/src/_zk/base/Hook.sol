@@ -12,10 +12,9 @@ import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
 import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
 import {Currency, CurrencyLibrary} from "v4-core/types/Currency.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
-import {WyvernInspired} from "v4-core/src/base/WyvernInspired.sol";
-import {PublicValuesStruct, Sig} from "./Structs.sol";
+import {Verification} from "./Verification.sol";
 
-abstract contract Hook is BaseHook, WyvernInspired {
+abstract contract Hook is BaseHook, Verification {
     using StateLibrary for IPoolManager;
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
@@ -68,7 +67,6 @@ abstract contract Hook is BaseHook, WyvernInspired {
         bytes calldata
     ) external override onlyByPoolManager returns (bytes4) {
         lastTicks[key.toId()] = tick;
-        emit TickUpdated(tick);
         return this.afterInitialize.selector;
     }
 
@@ -78,28 +76,21 @@ abstract contract Hook is BaseHook, WyvernInspired {
         IPoolManager.SwapParams calldata,
         bytes calldata data
     ) internal returns (bytes4, BeforeSwapDelta, uint24, bytes memory) {
-        (bytes memory publicValues, bytes memory sig) = abi.decode(
+        (bytes memory publicValues, bytes memory proofBytes) = abi.decode(
             data,
             (bytes, bytes)
         );
 
-        PublicValuesStruct memory _publicValues = abi.decode(
-            publicValues,
-            (PublicValuesStruct)
-        );
-
-        Sig memory _sig = abi.decode(sig, (Sig));
-
-        bytes32 hash = _hashOrder(_publicValues);
-
-        if (!_validateOrder(hash, _publicValues, _sig)) {
+        if (!pendingOrders[proofBytes]) {
             revert InvalidOrder();
         }
 
-        // Validate the pool key
-        // Validate the outputs of the proof
-
         (
+            // TODO: Probably need some of this...
+            // One is to check the direction of the trade
+            // Another is to call this with permit2 instead
+            // of the way we are doing it now (which has no
+            // actual assets lmao)
             address walletAddress,
             int24 tickToSellAt,
             bool zeroForOne,
@@ -112,20 +103,10 @@ abstract contract Hook is BaseHook, WyvernInspired {
             int24 tickSpacing,
             address hooks,
             bytes32 permit2Signature
-        ) = (
-                _publicValues.walletAddress,
-                _publicValues.tickToSellAt,
-                _publicValues.zeroForOne,
-                _publicValues.inputAmount,
-                _publicValues.outputAmount,
-                _publicValues.tokenInput,
-                _publicValues.token0,
-                _publicValues.token1,
-                _publicValues.fee,
-                _publicValues.tickSpacing,
-                _publicValues.hooks,
-                _publicValues.permit2Signature
-            );
+        ) = _verifyMiladyPoolOrderProof(publicValues, proofBytes);
+
+        // Validate the pool key
+        // Validate the outputs of the proof
 
         // TODO: Refactor this section; not gonna work because
         // you have to activate the permit 2 signature

@@ -17,9 +17,3 @@ struct PublicValuesStruct {
     address hooks; // Should be passed into IHooks interface
     bytes32 permit2Signature;
 }
-
-struct Sig {
-    uint8 v;
-    bytes32 r;
-    bytes32 s;
-}

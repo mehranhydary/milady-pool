@@ -31,55 +31,81 @@ contract MiladyPoolTaskManager is
     BLSSignatureChecker,
     OperatorStateRetriever,
     IMiladyPoolTaskManager,
-    Hook,
+    Hook
 {
     using BN254 for BN254.G1Point;
 
     constructor(
         IRegistryCoordinator _registryCoordinator,
         IPoolManager _poolManager,
+        // SP1 contracts to verify public values
+        address _verifier
     ) BLSSignatureChecker(_registryCoordinator) Hook(_poolManager, _verifier) {
+        // TASK_RESPONSE_WINDOW_BLOCK = 100;
     }
 
     function initialize(
         IPauserRegistry _pauserRegistry,
         address initialOwner,
+        bytes32 _miladyPoolProgramVKey
     ) public initializer {
         _initializePauser(_pauserRegistry, UNPAUSE_ALL);
         _transferOwnership(initialOwner);
+        _setMiladyPoolProgramVKey(_miladyPoolProgramVKey);
     }
 
-    function beforeSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        bytes calldata data
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
-        if (data.length == 0)
-            return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
-        (
-            bytes4 selector,
-            BeforeSwapDelta delta,
-            // TODO: Figure out what this is
-            uint24 lpFeeOverride,
-            bytes memory proofBytes
-        ) = _beforeSwap(sender, key, params, data);
-        emit OrderFulfilled(proofBytes);
-        return (selector, delta, lpFeeOverride);
+    function setVerifier(address _verifier) public onlyOwner {
+        _setVerifier(_verifier);
     }
 
-    function afterSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        BalanceDelta delta,
-        bytes calldata data
-    ) external override onlyByPoolManager returns (bytes4, int128) {
-        if (sender == address(this)) return (this.afterSwap.selector, 0);
-        int24 currentTick = _afterSwap(sender, key, params, delta, data);
-        emit TickUpdated(currentTick);
-        return (this.afterSwap.selector, 0);
+    function setMiladyPoolProgramVKey(
+        bytes32 _miladyPoolProgramVKey
+    ) public onlyOwner {
+        _setMiladyPoolProgramVKey(_miladyPoolProgramVKey);
     }
+
+    function createOrder(bytes calldata _proofBytes) external {
+        pendingOrders[_proofBytes] = true;
+        emit OrderCreated(_proofBytes);
+    }
+
+    function cancelOrder(bytes calldata _proofBytes) external {
+        if (!pendingOrders[_proofBytes]) revert InvalidOrder();
+        pendingOrders[_proofBytes] = false;
+        emit OrderCancelled(_proofBytes);
+    }
+
+    // function beforeSwap(
+    //     address sender,
+    //     PoolKey calldata key,
+    //     IPoolManager.SwapParams calldata params,
+    //     bytes calldata data
+    // ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    //     if (data.length == 0)
+    //         return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
+    //     (
+    //         bytes4 selector,
+    //         BeforeSwapDelta delta,
+    //         // TODO: Figure out what this is
+    //         uint24 lpFeeOverride,
+    //         bytes memory proofBytes
+    //     ) = _beforeSwap(sender, key, params, data);
+    //     emit OrderFulfilled(proofBytes);
+    //     return (selector, delta, lpFeeOverride);
+    // }
+
+    // function afterSwap(
+    //     address sender,
+    //     PoolKey calldata key,
+    //     IPoolManager.SwapParams calldata params,
+    //     BalanceDelta delta,
+    //     bytes calldata data
+    // ) external override onlyByPoolManager returns (bytes4, int128) {
+    //     if (sender == address(this)) return (this.afterSwap.selector, 0);
+    //     int24 currentTick = _afterSwap(sender, key, params, delta, data);
+    //     emit TickUpdated(currentTick);
+    //     return (this.afterSwap.selector, 0);
+    // }
 
     function getLowerUsableTick(
         int24 tick,
