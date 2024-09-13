@@ -74,14 +74,7 @@ abstract contract WyvernInspired {
     ) internal view returns (bool) {
         if (order.walletAddress == address(0)) return false;
         if (order.tickToSellAt == 0) return false;
-        if (order.inputAmount == 0) return false;
-        if (order.outputAmount == 0) return false;
-        if (order.tokenInput == address(0)) return false;
-        if (order.token0 == address(0)) return false;
-        if (order.token1 == address(0)) return false;
-        if (order.fee == 0) return false;
-        if (order.tickSpacing == 0) return false;
-        if (order.hooks == address(0)) return false;
+        if (order.amountSpecified == 0) return false;
         return true;
     }
 

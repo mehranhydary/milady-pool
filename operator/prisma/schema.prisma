@@ -20,8 +20,6 @@ model Order {
   tickToSellAt String
   zeroForOne Boolean
   inputAmount String?
-  outputAmount String?
-  tokenInput String
   poolKey PoolKey @relation(fields: [poolKeyId], references: [id])
   poolKeyId String
   permit2Signature String
@@ -33,7 +31,7 @@ model Order {
 
   @@index([trader])
   @@index([poolKeyId])
-  @@unique([trader, tickToSellAt, zeroForOne, tokenInput, startTime, poolKeyId])
+  @@unique([trader, tickToSellAt, zeroForOne, startTime, poolKeyId])
 }
 
 model PoolKey {

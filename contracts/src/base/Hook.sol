@@ -15,6 +15,8 @@ import {TickMath} from "v4-core/libraries/TickMath.sol";
 import {WyvernInspired} from "./WyvernInspired.sol";
 import {PublicValuesStruct, Sig} from "./Structs.sol";
 import {ISignatureTransfer} from "permit2/src/interfaces/ISignatureTransfer.sol";
+import {FixedPoint96} from "v4-core/libraries/FixedPoint96.sol";
+import {FullMath} from "v4-core/libraries/FullMath.sol";
 
 abstract contract Hook is BaseHook, WyvernInspired {
     using StateLibrary for IPoolManager;
@@ -99,14 +101,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
             address walletAddress,
             int24 tickToSellAt,
             bool zeroForOne,
-            uint256 inputAmount,
-            uint256 outputAmount,
-            address tokenInput,
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickSpacing,
-            address hooks,
+            int256 amountSpecified,
             bytes memory permit2Signature,
             uint256 permit2Nonce,
             uint256 permit2Deadline
@@ -114,28 +109,39 @@ abstract contract Hook is BaseHook, WyvernInspired {
                 _publicValues.walletAddress,
                 _publicValues.tickToSellAt,
                 _publicValues.zeroForOne,
-                _publicValues.inputAmount,
-                _publicValues.outputAmount,
-                _publicValues.tokenInput,
-                _publicValues.token0,
-                _publicValues.token1,
-                _publicValues.fee,
-                _publicValues.tickSpacing,
-                _publicValues.hooks,
+                _publicValues.amountSpecified,
                 _publicValues.permit2Signature,
                 _publicValues.permit2Nonce,
                 _publicValues.permit2Deadline
             );
+
+        // TODO: FIGURE OUT AMOUNT IN AND OUT BASED ON INFO LAID OUT IN THE STRUCT
 
         // TODO: Refactor this section; not gonna work because
         // you have to activate the permit 2 signature
         // Look here: https://blog.uniswap.org/permit2-integration-guide
 
         // Use Permit2 to transfer tokens from the user to this contract
+        uint256 inputAmount = amountSpecified > 0
+            ? uint256(amountSpecified)
+            : _calculateAmountIn(
+                uint256(-amountSpecified),
+                tickToSellAt,
+                key.tickSpacing,
+                zeroForOne
+                    ? Currency.unwrap(key.currency0)
+                    : Currency.unwrap(key.currency1),
+                zeroForOne
+                    ? Currency.unwrap(key.currency1)
+                    : Currency.unwrap(key.currency0),
+                key.fee
+            );
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer
             .PermitTransferFrom({
                 permitted: ISignatureTransfer.TokenPermissions({
-                    token: tokenInput,
+                    token: zeroForOne
+                        ? Currency.unwrap(key.currency0)
+                        : Currency.unwrap(key.currency1),
                     amount: inputAmount
                 }),
                 nonce: permit2Nonce,
@@ -156,51 +162,35 @@ abstract contract Hook is BaseHook, WyvernInspired {
             walletAddress,
             permit2Signature
         );
-        // TODO: Instead of passing back toBeforeSwapDelta(0, 0), pass back the token in and out amounts
-        // for the new swap function
 
-        // Which means...
+        uint256 outputAmount = amountSpecified > 0
+            ? _calculateAmountOut(
+                uint256(amountSpecified),
+                tickToSellAt,
+                key.tickSpacing,
+                zeroForOne
+                    ? Currency.unwrap(key.currency0)
+                    : Currency.unwrap(key.currency1),
+                zeroForOne
+                    ? Currency.unwrap(key.currency1)
+                    : Currency.unwrap(key.currency0),
+                key.fee
+            )
+            : uint256(-amountSpecified);
 
-        // BalanceDelta delta = poolManager.swap(
-        //     key,
-        //     IPoolManager.SwapParams({
-        //         zeroForOne: zeroForOne,
-        //         // TODO: Come back to this because  you might need to cast it and add a negative (check logic)
-        //         amountSpecified: tokenInput == token0
-        //             ? zeroForOne
-        //                 ? int256(inputAmount)
-        //                 : -int256(inputAmount)
-        //             : zeroForOne
-        //                 ? int256(outputAmount)
-        //                 : -int256(outputAmount),
-        //         sqrtPriceLimitX96: zeroForOne
-        //             ? TickMath.MIN_SQRT_PRICE + 1
-        //             : TickMath.MAX_SQRT_PRICE - 1
-        //     }),
-        //     ""
-        // );
+        // TODO: Need to update toBeforeSwapDelta to handle token in and out amounts
+        BeforeSwapDelta beforeSwapDelta;
+
+        // Calculate the amount out based on the given data
 
         if (zeroForOne) {
-            if (delta.amount0() < 0) {
-                _settle(key.currency0, uint128(-delta.amount0()));
-            }
-
-            if (delta.amount1() > 0) {
-                _take(key.currency1, uint128(-delta.amount1()));
-            }
+            beforeSwapDelta = toBeforeSwapDelta(-int128(amountSpecified), 0);
         } else {
-            if (delta.amount0() > 0) {
-                _take(key.currency0, uint128(-delta.amount0()));
-            }
-
-            if (delta.amount1() < 0) {
-                _settle(key.currency1, uint128(-delta.amount1()));
-            }
+            beforeSwapDelta = toBeforeSwapDelta(int128(amountSpecified), 0);
         }
 
         // Return the appropriate values
-        // TODO: Need to update toBeforeSwapDelta to handle token in and out amounts
-        return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
+        return (this.beforeSwap.selector, beforeSwapDelta, 0);
     }
 
     function _afterSwap(
@@ -214,15 +204,61 @@ abstract contract Hook is BaseHook, WyvernInspired {
         return currentTick;
     }
 
-    function _settle(Currency currency, uint128 amount) internal {
-        // Transfer tokens to PM and let it know
-        poolManager.sync(currency);
-        currency.transfer(address(poolManager), amount);
-        poolManager.settle();
+    function _calculateAmountOut(
+        uint256 amountIn,
+        int24 tickToSellAt,
+        int24 tickSpacing,
+        address tokenIn,
+        address tokenOut,
+        uint24 fee
+    ) internal pure returns (uint256 amountOut) {
+        uint160 sqrtPriceX96 = TickMath.getSqrtPriceAtTick(tickToSellAt);
+        uint256 priceX96 = FullMath.mulDiv(
+            sqrtPriceX96,
+            sqrtPriceX96,
+            FixedPoint96.Q96
+        );
+
+        // Calculate the amount out before fees
+        if (tokenIn < tokenOut) {
+            // token0 to token1
+            amountOut = FullMath.mulDiv(amountIn, priceX96, FixedPoint96.Q96);
+        } else {
+            // token1 to token0
+            amountOut = FullMath.mulDiv(amountIn, FixedPoint96.Q96, priceX96);
+        }
+
+        // Apply the fee
+        uint256 feeAmount = FullMath.mulDiv(amountOut, fee, 1e6);
+        amountOut -= feeAmount;
     }
 
-    function _take(Currency currency, uint128 amount) internal {
-        // Take tokens out of PM to our hook contract
-        poolManager.take(currency, address(this), amount);
+    function _calculateAmountIn(
+        uint256 amountOut,
+        int24 tickToSellAt,
+        int24 tickSpacing,
+        address tokenIn,
+        address tokenOut,
+        uint24 fee
+    ) internal pure returns (uint256 amountIn) {
+        uint160 sqrtPriceX96 = TickMath.getSqrtPriceAtTick(tickToSellAt);
+        uint256 priceX96 = FullMath.mulDiv(
+            sqrtPriceX96,
+            sqrtPriceX96,
+            FixedPoint96.Q96
+        );
+
+        // Calculate the amount in before fees
+        if (tokenIn < tokenOut) {
+            // token0 to token1
+            amountIn = FullMath.mulDiv(amountOut, FixedPoint96.Q96, priceX96);
+        } else {
+            // token1 to token0
+            amountIn = FullMath.mulDiv(amountOut, priceX96, FixedPoint96.Q96);
+        }
+
+        // Apply the fee
+        uint256 feeAmount = FullMath.mulDiv(amountIn, fee, 1e6);
+        amountIn += feeAmount;
     }
 }

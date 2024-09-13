@@ -53,44 +53,21 @@ const avsDirectoryContract = new Contract(
 const submitValidOrder = async (order: OrderWithPoolKey) => {
 	const abiEncoder = AbiCoder.defaultAbiCoder()
 	const orderEncoded = abiEncoder.encode(
-		[
-			'address',
-			'int24',
-			'bool',
-			'uint256',
-			'uint256',
-			'address',
-			'address',
-			'address',
-			'uint24',
-			'int24',
-			'address',
-			'bytes',
-			'uint256',
-			'uint256',
-		],
+		['address', 'int24', 'bool', 'int256', 'bytes', 'uint256', 'uint256'],
 		[
 			order.trader,
 			order.tickToSellAt,
 			order.zeroForOne,
 			order.inputAmount,
-			order.outputAmount,
-			order.tokenInput,
-			order.poolKey.token0,
-			order.poolKey.token1,
-			order.poolKey.fee,
-			order.poolKey.tickSpacing,
-			order.poolKey.hooks,
-			// TODO: Replace with permit2Signature, permit2Nonce, and permit2Deadline
-			ZeroAddress,
-			order.startTime,
-			order.deadline,
+			order.permit2Signature,
+			order.permit2Nonce,
+			order.permit2Deadline,
 		]
 	)
 	const encodedData = abiEncoder.encode(
 		['bytes', 'bytes'],
 		// TODO: Add signature
-		[orderEncoded, '']
+		[orderEncoded, order.orderSignature]
 	)
 	const tx = await miladyPoolContract.swap(
 		{
@@ -101,8 +78,8 @@ const submitValidOrder = async (order: OrderWithPoolKey) => {
 			hooks: order.poolKey.hooks,
 		},
 		{
-			zeroForOne: order.zeroForOne,
-			amountSpecified: order.inputAmount,
+			zeroForOne: true,
+			amountSpecified: 0, // Obscured because of dark pool
 			sqrtPriceLimitX96: order.tickToSellAt, // TODO: Calculate this value from Tick
 		},
 		encodedData // Has encoded order and signature

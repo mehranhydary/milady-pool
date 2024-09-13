@@ -75,7 +75,12 @@ interface IPoolManager is IProtocolFees, IERC6909Claims, IExtsload, IExttload {
     /// @param liquidityDelta The amount of liquidity that was added or removed
     /// @param salt The extra data to make positions unique
     event ModifyLiquidity(
-        PoolId indexed id, address indexed sender, int24 tickLower, int24 tickUpper, int256 liquidityDelta, bytes32 salt
+        PoolId indexed id,
+        address indexed sender,
+        int24 tickLower,
+        int24 tickUpper,
+        int256 liquidityDelta,
+        bytes32 salt
     );
 
     /// @notice Emitted for swaps between currency0 and currency1
@@ -110,9 +115,11 @@ interface IPoolManager is IProtocolFees, IERC6909Claims, IExtsload, IExttload {
     /// @param sqrtPriceX96 The initial square root price
     /// @param hookData The data to pass through to the initialize hooks
     /// @return tick The initial tick of the pool
-    function initialize(PoolKey memory key, uint160 sqrtPriceX96, bytes calldata hookData)
-        external
-        returns (int24 tick);
+    function initialize(
+        PoolKey memory key,
+        uint160 sqrtPriceX96,
+        bytes calldata hookData
+    ) external returns (int24 tick);
 
     struct ModifyLiquidityParams {
         // the lower and upper tick of the position
@@ -131,9 +138,11 @@ interface IPoolManager is IProtocolFees, IERC6909Claims, IExtsload, IExttload {
     /// @param hookData The data to pass through to the add/removeLiquidity hooks
     /// @return callerDelta The balance delta of the caller of modifyLiquidity. This is the total of both principal and fee deltas.
     /// @return feeDelta The balance delta of the fees generated in the liquidity range. Returned for informational purposes.
-    function modifyLiquidity(PoolKey memory key, ModifyLiquidityParams memory params, bytes calldata hookData)
-        external
-        returns (BalanceDelta callerDelta, BalanceDelta feeDelta);
+    function modifyLiquidity(
+        PoolKey memory key,
+        ModifyLiquidityParams memory params,
+        bytes calldata hookData
+    ) external returns (BalanceDelta callerDelta, BalanceDelta feeDelta);
 
     struct SwapParams {
         bool zeroForOne;
@@ -149,9 +158,11 @@ interface IPoolManager is IProtocolFees, IERC6909Claims, IExtsload, IExttload {
     /// @dev Swapping on low liquidity pools may cause unexpected swap amounts when liquidity available is less than amountSpecified.
     /// Additionally note that if interacting with hooks that have the BEFORE_SWAP_RETURNS_DELTA_FLAG or AFTER_SWAP_RETURNS_DELTA_FLAG
     /// the hook may alter the swap input/output. Integrators should perform checks on the returned swapDelta.
-    function swap(PoolKey memory key, SwapParams memory params, bytes calldata hookData)
-        external
-        returns (BalanceDelta swapDelta);
+    function swap(
+        PoolKey memory key,
+        SwapParams memory params,
+        bytes calldata hookData
+    ) external returns (BalanceDelta swapDelta);
 
     /// @notice Donate the given currency amounts to the pool with the given pool key
     /// @param key The key of the pool to donate to
@@ -159,9 +170,12 @@ interface IPoolManager is IProtocolFees, IERC6909Claims, IExtsload, IExttload {
     /// @param amount1 The amount of currency1 to donate
     /// @param hookData The data to pass through to the donate hooks
     /// @return BalanceDelta The delta of the caller after the donate
-    function donate(PoolKey memory key, uint256 amount0, uint256 amount1, bytes calldata hookData)
-        external
-        returns (BalanceDelta);
+    function donate(
+        PoolKey memory key,
+        uint256 amount0,
+        uint256 amount1,
+        bytes calldata hookData
+    ) external returns (BalanceDelta);
 
     /// @notice Writes the current ERC20 balance of the specified currency to transient storage
     /// This is used to checkpoint balances for the manager and derive deltas for the caller.
