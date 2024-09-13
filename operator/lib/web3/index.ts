@@ -11,7 +11,7 @@ import {
 import { delegationManagerAbi } from './abis/delegationManagerAbi'
 import { stakeRegistryAbi } from './abis/stakeRegistryAbi'
 import { avsDirectoryAbi } from './abis/avsDirectoryAbi'
-import { miladyPoolTaskManagerAbi } from './abis/miladyPoolTaskManagerAbi'
+import { miladyPoolOrderManagerAbi } from './abis/miladyPoolOrderManagerAbi'
 import { getDb } from '../db/getDb'
 import { Order, PoolKey } from '@prisma/client'
 
@@ -24,7 +24,7 @@ const provider = new JsonRpcProvider(
 const wallet = new Wallet(process.env.PRIVATE_KEY as string, provider)
 
 const delegationManagerAddress = process.env.DELEGATION_MANAGER_ADDRESS!
-const miladyPoolTaskManagerContractAddress =
+const miladyPoolOrderManagerContractAddress =
 	process.env.MILADY_POOL_CONTRACT_ADDRESS!
 const stakeRegistryAddress = process.env.STAKE_REGISTRY_ADDRESS!
 const avsDirectoryAddress = process.env.AVS_DIRECTORY_ADDRESS!
@@ -35,8 +35,8 @@ const delegationManagerContract = new Contract(
 	wallet
 )
 const miladyPoolContract = new Contract(
-	miladyPoolTaskManagerContractAddress,
-	miladyPoolTaskManagerAbi,
+	miladyPoolOrderManagerContractAddress,
+	miladyPoolOrderManagerAbi,
 	wallet
 )
 const stakeRegistryContract = new Contract(
@@ -83,7 +83,7 @@ const submitValidOrder = async (order: OrderWithPoolKey) => {
 	)
 
 	await tx.wait()
-	console.log('Order sent to MiladyPoolTaskManager')
+	console.log('Order sent to MiladyPoolOrderManager')
 }
 
 export const monitorNewTicks = async () => {

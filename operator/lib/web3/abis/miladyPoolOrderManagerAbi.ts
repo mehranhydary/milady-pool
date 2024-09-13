@@ -1,4 +1,4 @@
-export const miladyPoolTaskManagerAbi = [
+export const miladyPoolOrderManagerAbi = [
 	{
 		type: 'constructor',
 		inputs: [

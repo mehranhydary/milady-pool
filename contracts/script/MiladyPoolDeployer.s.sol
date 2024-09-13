@@ -23,8 +23,8 @@ import {StakeRegistry} from "@eigenlayer-middleware/src/StakeRegistry.sol";
 import "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 
 import {MiladyPoolServiceManager, IServiceManager} from "../src/MiladyPoolServiceManager.sol";
-import {MiladyPoolTaskManager} from "../src/MiladyPoolTaskManager.sol";
-import {IMiladyPoolTaskManager} from "../src/interfaces/IMiladyPoolTaskManager.sol";
+import {MiladyPoolOrderManager} from "../src/MiladyPoolOrderManager.sol";
+import {IMiladyPoolOrderManager} from "../src/interfaces/IMiladyPoolOrderManager.sol";
 // TODO: Figure out why we need an ERC20Mock.sol...
 import "../src/ERC20Mock.sol";
 
@@ -73,8 +73,8 @@ contract MiladyPoolDeployer is Script, Utils {
     MiladyPoolServiceManager public miladyPoolServiceManager;
     IServiceManager public miladyPoolServiceManagerImplementation;
 
-    MiladyPoolTaskManager public miladyPoolTaskManager;
-    IMiladyPoolTaskManager public miladyPoolTaskManagerImplementation;
+    MiladyPoolOrderManager public miladyPoolOrderManager;
+    IMiladyPoolOrderManager public miladyPoolOrderManagerImplementation;
 
     function run() external {
         string memory eigenlayerDeployedContracts = readOutput(
@@ -210,7 +210,7 @@ contract MiladyPoolDeployer is Script, Utils {
             )
         );
 
-        miladyPoolTaskManager = MiladyPoolTaskManager(
+        miladyPoolOrderManager = MiladyPoolOrderManager(
             address(
                 new TransparentUpgradeableProxy(
                     address(emptyContract),
@@ -366,7 +366,7 @@ contract MiladyPoolDeployer is Script, Utils {
             avsDirectory,
             registryCoordinator,
             stakeRegistry,
-            miladyPoolTaskManager
+            miladyPoolOrderManager
         );
 
         miladyPoolProxyAdmin.upgrade(
@@ -376,7 +376,7 @@ contract MiladyPoolDeployer is Script, Utils {
             address(miladyPoolServiceManagerImplementation)
         );
 
-        // TODO: Initalize this correctly (see variables in MiladyPoolTaskManager)
+        // TODO: Initalize this correctly (see variables in MiladyPoolOrderManager)
         uint160 flags = uint160(
             Hooks.AFTER_INITIALIZE_FLAG |
                 Hooks.BEFORE_SWAP_FLAG |
@@ -387,32 +387,28 @@ contract MiladyPoolDeployer is Script, Utils {
         (address hookAddress, bytes32 salt) = HookMiner.find(
             CREATE2_DEPLOYER,
             flags,
-            type(MiladyPoolTaskManager).creationCode,
+            type(MiladyPoolOrderManager).creationCode,
             abi.encode(registryCoordinator, POOL_MANAGER)
         );
 
-        miladyPoolTaskManagerImplementation = new MiladyPoolTaskManager{
+        miladyPoolOrderManagerImplementation = new MiladyPoolOrderManager{
             salt: salt
         }(registryCoordinator, POOL_MANAGER);
 
         require(
-            address(miladyPoolTaskManagerImplementation) == hookAddress,
+            address(miladyPoolOrderManagerImplementation) == hookAddress,
             "Hook address does not match"
         );
 
         miladyPoolProxyAdmin.upgradeAndCall(
             TransparentUpgradeableProxy(
-                payable(address(miladyPoolTaskManager))
+                payable(address(miladyPoolOrderManager))
             ),
-            address(miladyPoolTaskManagerImplementation),
+            address(miladyPoolOrderManagerImplementation),
             abi.encodeWithSelector(
-                miladyPoolTaskManager.initialize.selector,
+                miladyPoolOrderManager.initialize.selector,
                 miladyPoolPauserReg,
-                miladyPoolCommunityMultisig,
-                // TODO: Come back to this and put the actual vkey here for Succinct
-                bytes32(
-                    0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-                )
+                miladyPoolCommunityMultisig
             )
         );
 
@@ -442,13 +438,13 @@ contract MiladyPoolDeployer is Script, Utils {
         );
         vm.serializeAddress(
             deployed_addresses,
-            "miladyPoolTaskManager",
-            address(miladyPoolTaskManager)
+            "miladyPoolOrderManager",
+            address(miladyPoolOrderManager)
         );
         vm.serializeAddress(
             deployed_addresses,
-            "miladyPoolTaskManagerImplementation",
-            address(miladyPoolTaskManagerImplementation)
+            "miladyPoolOrderManagerImplementation",
+            address(miladyPoolOrderManagerImplementation)
         );
         vm.serializeAddress(
             deployed_addresses,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
-interface IMiladyPoolTaskManager {
+interface IMiladyPoolOrderManager {
     // Need events
     event OrderCreated(bytes proofBytes);
     // TODO: Figure out if we need a correpsonding order id

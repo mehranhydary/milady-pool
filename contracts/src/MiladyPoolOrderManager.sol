@@ -21,18 +21,18 @@ import "@eigenlayer-middleware/src/libraries/BN254.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
 
 // Custom:
-import "./interfaces/IMiladyPoolTaskManager.sol";
+import "./interfaces/IMiladyPoolOrderManager.sol";
 import {Hook} from "./base/Hook.sol";
 
 // TODO: Need to add ERC6909 or ERC1155 to ensure that
 // users can withdraw their tokens after a trade takes place
 // through the pool and their verified proof is accepted.
-contract MiladyPoolTaskManager is
+contract MiladyPoolOrderManager is
     OwnableUpgradeable,
     Pausable,
     BLSSignatureChecker,
     OperatorStateRetriever,
-    IMiladyPoolTaskManager,
+    IMiladyPoolOrderManager,
     Hook
 {
     using BN254 for BN254.G1Point;
