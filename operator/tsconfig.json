@@ -15,7 +15,7 @@
 			"@/workers/*": ["workers/*"],
 			"@/test/*": ["test/*"],
 			"@uniswap/Permit2-sdk": ["permit2-sdk/src/index"],
-			"@/*": ["src/*"]
+			"@/*": ["core/*"]
 		},
 		"typeRoots": ["./node_modules/@types", "./@types", "./@types/*"],
 		"types": ["node"],

@@ -156,7 +156,10 @@ abstract contract Hook is BaseHook, WyvernInspired {
             walletAddress,
             permit2Signature
         );
-        // TODO:
+        // TODO: Instead of passing back toBeforeSwapDelta(0, 0), pass back the token in and out amounts
+        // for the new swap function
+
+        // Which means...
 
         // BalanceDelta delta = poolManager.swap(
         //     key,

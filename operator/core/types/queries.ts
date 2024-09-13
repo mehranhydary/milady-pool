@@ -23,7 +23,7 @@ export interface CreateOrderInput {
   outputAmount?: InputMaybe<Scalars['String']['input']>;
   permit2Signature: Scalars['String']['input'];
   startTime?: InputMaybe<Scalars['ISO8601Date']['input']>;
-  tickSpacing: Scalars['Int']['input'];
+  tickSpacing: Scalars['String']['input'];
   tickToSellAt?: InputMaybe<Scalars['Int']['input']>;
   tokenA: Scalars['String']['input'];
   tokenB: Scalars['String']['input'];
@@ -58,7 +58,7 @@ export interface PoolKey {
   fee: Scalars['String']['output'];
   hooks: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  tickSpacing: Scalars['Int']['output'];
+  tickSpacing: Scalars['String']['output'];
   token0: Scalars['String']['output'];
   token1: Scalars['String']['output'];
 }

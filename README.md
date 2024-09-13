@@ -34,7 +34,7 @@ Instructions to manually run Milady Pool are listed below. Please note that this
 1. To get started, we will prepare the contracts
 2. Run `cd contracts && cp .env.example .env`
 3. Run `forge build`
-4. Start anvil by opening another terminal and running `anvil`
+4. Start anvil by opening another terminal and running `anvil --host 0.0.0.0`
 5. In another terminal, deploy Eigenlayer contracts
 
 Change into `contracts/lib/eigenlayer-contracts` and run the following commands (the other one is old (in eigenlayer-middleware/lib/eigenlayer-contracts))

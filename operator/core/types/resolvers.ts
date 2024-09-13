@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { Decimal, GraphqlContext, RootValue } from './core/graphql/schema';
+import { GraphqlContext, RootValue } from '../graphql/schema';
 export type Maybe<T> = T | undefined | null;
 export type InputMaybe<T> = T | undefined | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -26,7 +26,7 @@ export interface CreateOrderInput {
   outputAmount?: InputMaybe<Scalars['String']['input']>;
   permit2Signature: Scalars['String']['input'];
   startTime?: InputMaybe<Scalars['ISO8601Date']['input']>;
-  tickSpacing: Scalars['Int']['input'];
+  tickSpacing: Scalars['String']['input'];
   tickToSellAt?: InputMaybe<Scalars['Int']['input']>;
   tokenA: Scalars['String']['input'];
   tokenB: Scalars['String']['input'];
@@ -61,7 +61,7 @@ export interface PoolKey {
   fee: Scalars['String']['output'];
   hooks: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  tickSpacing: Scalars['Int']['output'];
+  tickSpacing: Scalars['String']['output'];
   token0: Scalars['String']['output'];
   token1: Scalars['String']['output'];
 }
@@ -193,7 +193,7 @@ export type PoolKeyResolvers<ContextType = GraphqlContext, ParentType extends Re
   fee?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   hooks?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  tickSpacing?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  tickSpacing?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   token0?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   token1?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

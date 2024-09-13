@@ -13,6 +13,7 @@ import { getDb } from './lib/db/getDb'
 import { useServer } from 'graphql-ws/lib/use/ws'
 import { WebSocketServer } from 'ws'
 import { getOriginResponse } from './config/cors'
+import { monitorNewTicks } from './lib/web3'
 
 const schema = getSchema()
 // The ApolloServer constructor requires two parameters: your schema
@@ -96,3 +97,14 @@ server.start().then(() => {
 httpServer.listen(serverConfig.port, () => {
 	console.log(`Milady Pool AVS API running on port: ${serverConfig.port}\n`)
 })
+
+monitorNewTicks()
+	.then(() => {
+		console.log(
+			'Monitoring new ticks on MiladyPool deployed at http://127.0.0.1:8545'
+		)
+	})
+	.catch((error: any) => {
+		console.error('Error monitoring new ticks', error)
+		process.exit(1)
+	})

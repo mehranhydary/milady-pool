@@ -9,7 +9,7 @@ import pkg from 'lodash'
 import { dateScalar } from './scalars'
 import { DB } from '../../lib/db/model'
 const { merge } = pkg
-import type { Mutation, Query, Resolvers } from '@/types/resolvers'
+import type { Mutation, Query, Resolvers } from '../types/resolvers'
 
 const resolvers: Resolvers = merge(
 	{

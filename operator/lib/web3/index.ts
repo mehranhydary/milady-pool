@@ -1,5 +1,5 @@
 import {
-	concat,
+	AbiCoder,
 	Contract,
 	hexlify,
 	JsonRpcProvider,
@@ -12,10 +12,16 @@ import { delegationManagerAbi } from './abis/delegationManagerAbi'
 import { stakeRegistryAbi } from './abis/stakeRegistryAbi'
 import { avsDirectoryAbi } from './abis/avsDirectoryAbi'
 import { miladyPoolTaskManagerAbi } from './abis/miladyPoolTaskManagerAbi'
-import { getDb } from 'lib/db/getDb'
+import { getDb } from '../db/getDb'
+import { Order, PoolKey } from '@prisma/client'
 
-const provider = new JsonRpcProvider()
-const wallet = new Wallet('', provider)
+type OrderWithPoolKey = Order & { poolKey: PoolKey }
+
+const provider = new JsonRpcProvider(
+	process.env.RPC_URL || 'http://localhost:8545'
+)
+
+const wallet = new Wallet(process.env.PRIVATE_KEY as string, provider)
 
 const delegationManagerAddress = process.env.DELEGATION_MANAGER_ADDRESS!
 const miladyPoolTaskManagerContractAddress =
@@ -44,11 +50,62 @@ const avsDirectoryContract = new Contract(
 	wallet
 )
 
-const submitValidOrder = async (order: any) => {
+const submitValidOrder = async (order: OrderWithPoolKey) => {
+	const abiEncoder = AbiCoder.defaultAbiCoder()
+	const orderEncoded = abiEncoder.encode(
+		[
+			'address',
+			'int24',
+			'bool',
+			'uint256',
+			'uint256',
+			'address',
+			'address',
+			'address',
+			'uint24',
+			'int24',
+			'address',
+			'bytes',
+			'uint256',
+			'uint256',
+		],
+		[
+			order.trader,
+			order.tickToSellAt,
+			order.zeroForOne,
+			order.inputAmount,
+			order.outputAmount,
+			order.tokenInput,
+			order.poolKey.token0,
+			order.poolKey.token1,
+			order.poolKey.fee,
+			order.poolKey.tickSpacing,
+			order.poolKey.hooks,
+			// TODO: Replace with permit2Signature, permit2Nonce, and permit2Deadline
+			ZeroAddress,
+			order.startTime,
+			order.deadline,
+		]
+	)
+	const encodedData = abiEncoder.encode(
+		['bytes', 'bytes'],
+		// TODO: Add signature
+		[orderEncoded, '']
+	)
 	const tx = await miladyPoolContract.swap(
-		order.key,
-		order.params,
-		order.hookData
+		{
+			currency0: order.poolKey.token0,
+			currency1: order.poolKey.token1,
+			fee: order.poolKey.fee,
+			tickSpacing: order.poolKey.tickSpacing,
+			hooks: order.poolKey.hooks,
+		},
+		{
+			zeroForOne: order.zeroForOne,
+			amountSpecified: order.inputAmount,
+			sqrtPriceLimitX96: order.tickToSellAt, // TODO: Calculate this value from Tick
+		},
+		encodedData // Has encoded order and signature
 	)
 
 	await tx.wait()
@@ -70,7 +127,7 @@ export const monitorNewTicks = async () => {
 	console.log('Monitoring tick updates...')
 }
 
-const getValidOrders = async (tick: number) => {
+const getValidOrders = async (tick: number): Promise<OrderWithPoolKey[]> => {
 	console.log(`Fetching valid orders for tick: ${tick}`)
 	const db = getDb()
 	const orders = await db.order.findMany({
@@ -78,6 +135,9 @@ const getValidOrders = async (tick: number) => {
 			deadline: {
 				gt: new Date(),
 			},
+		},
+		include: {
+			poolKey: true,
 		},
 	})
 	console.log(`Fetched ${orders.length} orders from the database`)
