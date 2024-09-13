@@ -27,6 +27,9 @@ model Order {
   permit2Signature String
   startTime DateTime
   deadline DateTime
+  permit2Deadline DateTime @default(now())
+  permit2Nonce String
+  orderSignature String
 
   @@index([trader])
   @@index([poolKeyId])
