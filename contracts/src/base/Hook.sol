@@ -62,14 +62,6 @@ abstract contract Hook is BaseHook, WyvernInspired {
             });
     }
 
-    function _afterInitialize(
-        PoolKey calldata key,
-        int24 tick
-    ) internal returns (int24) {
-        lastTicks[key.toId()] = tick;
-        return tick;
-    }
-
     function _beforeSwap(
         address,
         PoolKey calldata key,
@@ -195,17 +187,6 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
         // Return the appropriate values
         return (this.beforeSwap.selector, beforeSwapDelta, 0);
-    }
-
-    function _afterSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata,
-        BalanceDelta,
-        bytes calldata
-    ) internal returns (int24) {
-        (, int24 currentTick, , ) = poolManager.getSlot0(key.toId());
-        return currentTick;
     }
 
     function _calculateAmountOut(

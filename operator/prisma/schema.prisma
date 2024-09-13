@@ -19,7 +19,7 @@ model Order {
   trader String
   tickToSellAt String
   zeroForOne Boolean
-  inputAmount String?
+  amountSpecified String?
   poolKey PoolKey @relation(fields: [poolKeyId], references: [id])
   poolKeyId String
   permit2Signature String

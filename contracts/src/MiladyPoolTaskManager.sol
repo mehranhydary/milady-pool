@@ -6,7 +6,8 @@ import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
 import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
-
+import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
+import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 // Eigenlayer
 import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
@@ -17,6 +18,7 @@ import {RegistryCoordinator} from "@eigenlayer-middleware/src/RegistryCoordinato
 import {BLSSignatureChecker, IRegistryCoordinator} from "@eigenlayer-middleware/src/BLSSignatureChecker.sol";
 import {OperatorStateRetriever} from "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 import "@eigenlayer-middleware/src/libraries/BN254.sol";
+import {TickMath} from "v4-core/libraries/TickMath.sol";
 
 // Custom:
 import "./interfaces/IMiladyPoolTaskManager.sol";
@@ -34,6 +36,8 @@ contract MiladyPoolTaskManager is
     Hook
 {
     using BN254 for BN254.G1Point;
+    using PoolIdLibrary for PoolKey;
+    using StateLibrary for IPoolManager;
 
     constructor(
         IRegistryCoordinator _registryCoordinator,
@@ -55,8 +59,7 @@ contract MiladyPoolTaskManager is
         int24 tick,
         bytes calldata
     ) external override onlyByPoolManager returns (bytes4) {
-        _afterInitialize(key, tick);
-        emit TickUpdated(tick);
+        emit PriceUpdated(TickMath.getSqrtPriceAtTick(tick));
         return this.afterInitialize.selector;
     }
 
@@ -86,9 +89,8 @@ contract MiladyPoolTaskManager is
         BalanceDelta delta,
         bytes calldata data
     ) external override onlyByPoolManager returns (bytes4, int128) {
-        if (sender == address(this)) return (this.afterSwap.selector, 0);
-        int24 currentTick = _afterSwap(sender, key, params, delta, data);
-        emit TickUpdated(currentTick);
+        (, int24 currentTick, , ) = poolManager.getSlot0(key.toId());
+        emit PriceUpdated(TickMath.getSqrtPriceAtTick(currentTick));
         return (this.afterSwap.selector, 0);
     }
 

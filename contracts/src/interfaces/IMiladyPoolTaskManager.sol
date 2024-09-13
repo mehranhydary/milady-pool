@@ -9,7 +9,7 @@ interface IMiladyPoolTaskManager {
     // TODO: Figure out if you want to add more details for the trade here
     event OrderFulfilled(bytes proofBytes);
 
-    event TickUpdated(int24 tick);
+    event PriceUpdated(uint160 currentSqrtPriceX96);
 
     event OrderCancelled(bytes proofBytes);
     // TODO: Add events for challenges (successful and unsuccessful)

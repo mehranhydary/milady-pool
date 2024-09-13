@@ -75,8 +75,8 @@ const submitValidOrder = async (order: OrderWithPoolKey) => {
 			hooks: order.poolKey.hooks,
 		},
 		{
-			zeroForOne: true,
-			amountSpecified: 0, // Obscured because of dark pool
+			zeroForOne: order.zeroForOne,
+			amountSpecified: order.amountSpecified,
 			sqrtPriceLimitX96: order.tickToSellAt, // TODO: Calculate this value from Tick
 		},
 		encodedData // Has encoded order and signature
