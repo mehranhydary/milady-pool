@@ -21,6 +21,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
 
+    // TODO: Hardcoded for now, should update so that we pass it in
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
     // TODO: Figure out if we need latest order id, order hashes, zkps, matching order ids, responses, challenges, etc.
@@ -155,26 +156,26 @@ abstract contract Hook is BaseHook, WyvernInspired {
             walletAddress,
             permit2Signature
         );
+        // TODO:
 
-        BalanceDelta delta = poolManager.swap(
-            key,
-            IPoolManager.SwapParams({
-                zeroForOne: zeroForOne,
-                // TODO: Come back to this because  you might need to cast it and add a negative (check logic)
-                amountSpecified: tokenInput == token0
-                    ? zeroForOne
-                        ? int256(inputAmount)
-                        : -int256(inputAmount)
-                    : zeroForOne
-                        ? int256(outputAmount)
-                        : -int256(outputAmount),
-                sqrtPriceLimitX96: zeroForOne
-                    ? TickMath.MIN_SQRT_PRICE + 1
-                    : TickMath.MAX_SQRT_PRICE - 1
-            }),
-            // TODO: Figure out if you want to handle this here again too lmao (permit2signature)
-            ""
-        );
+        // BalanceDelta delta = poolManager.swap(
+        //     key,
+        //     IPoolManager.SwapParams({
+        //         zeroForOne: zeroForOne,
+        //         // TODO: Come back to this because  you might need to cast it and add a negative (check logic)
+        //         amountSpecified: tokenInput == token0
+        //             ? zeroForOne
+        //                 ? int256(inputAmount)
+        //                 : -int256(inputAmount)
+        //             : zeroForOne
+        //                 ? int256(outputAmount)
+        //                 : -int256(outputAmount),
+        //         sqrtPriceLimitX96: zeroForOne
+        //             ? TickMath.MIN_SQRT_PRICE + 1
+        //             : TickMath.MAX_SQRT_PRICE - 1
+        //     }),
+        //     ""
+        // );
 
         if (zeroForOne) {
             if (delta.amount0() < 0) {

@@ -1,18 +1,27 @@
-import { Contract, JsonRpcProvider, Wallet } from 'ethers'
+import {
+	concat,
+	Contract,
+	hexlify,
+	JsonRpcProvider,
+	randomBytes,
+	SigningKey,
+	Wallet,
+	ZeroAddress,
+} from 'ethers'
 import { delegationManagerAbi } from './abis/delegationManagerAbi'
 import { stakeRegistryAbi } from './abis/stakeRegistryAbi'
 import { avsDirectoryAbi } from './abis/avsDirectoryAbi'
+import { miladyPoolTaskManagerAbi } from './abis/miladyPoolTaskManagerAbi'
+import { getDb } from 'lib/db/getDb'
 
 const provider = new JsonRpcProvider()
 const wallet = new Wallet('', provider)
 
-
-const miladyPoolAbi = []
-
-const delegationManagerAddress=process.env.DELEGATION_MANAGER_ADDRESS!;
-const miladyPoolContractAddress=process.env.MILADY_POOL_CONTRACT_ADDRESS!;
-const stakeRegistryAddress=process.env.STAKE_REGISTRY_ADDRESS!;
-const avsDirectoryAddress=process.env.AVS_DIRECTORY_ADDRESS!;
+const delegationManagerAddress = process.env.DELEGATION_MANAGER_ADDRESS!
+const miladyPoolTaskManagerContractAddress =
+	process.env.MILADY_POOL_CONTRACT_ADDRESS!
+const stakeRegistryAddress = process.env.STAKE_REGISTRY_ADDRESS!
+const avsDirectoryAddress = process.env.AVS_DIRECTORY_ADDRESS!
 
 const delegationManagerContract = new Contract(
 	delegationManagerAddress,
@@ -20,8 +29,8 @@ const delegationManagerContract = new Contract(
 	wallet
 )
 const miladyPoolContract = new Contract(
-	miladyPoolContractAddress,
-	miladyPoolAbi,
+	miladyPoolTaskManagerContractAddress,
+	miladyPoolTaskManagerAbi,
 	wallet
 )
 const stakeRegistryContract = new Contract(
@@ -35,19 +44,101 @@ const avsDirectoryContract = new Contract(
 	wallet
 )
 
-const submitValidOrder = async () => {
-  const order = {}
-  
-  const x = await miladyPoolContract.
+const submitValidOrder = async (order: any) => {
+	const tx = await miladyPoolContract.swap(
+		order.key,
+		order.params,
+		order.hookData
+	)
+
+	await tx.wait()
+	console.log('Order sent to MiladyPoolTaskManager')
 }
 
 export const monitorNewTicks = async () => {
-	miladyPoolContract.on('TickUpdated', async () => {
+	miladyPoolContract.on('TickUpdated', async (tick: number) => {
 		console.log(
 			'Tick updated... check orders in the db to see if any qualify'
 		)
+
+		const validOrders = await getValidOrders(tick)
+		for (const order of validOrders) {
+			await submitValidOrder(order)
+		}
 	})
 
 	console.log('Monitoring tick updates...')
 }
 
+const getValidOrders = async (tick: number) => {
+	console.log(`Fetching valid orders for tick: ${tick}`)
+	const db = getDb()
+	const orders = await db.order.findMany({
+		where: {
+			deadline: {
+				gt: new Date(),
+			},
+		},
+	})
+	console.log(`Fetched ${orders.length} orders from the database`)
+	const validOrders = orders.filter((order: any) => {
+		const isValid = order.params.zeroForOne
+			? order.tokenInput === order.poolKey.token0 &&
+			  tick <= order.tickToSellAt
+			: order.tokenInput === order.poolKey.token1 &&
+			  tick >= order.tickToSellAt
+		console.log(
+			`Order ${order.id} is ${
+				isValid ? 'valid' : 'invalid'
+			} for tick: ${tick}`
+		)
+		return isValid
+	})
+	console.log(`Found ${validOrders.length} valid orders for tick: ${tick}`)
+	return validOrders
+}
+
+export const registerOperator = async () => {
+	console.log('Registering operator for MiladyPool')
+
+	const tx1 = await delegationManagerContract.registerAsOperator(
+		{
+			earningsReceiver: await wallet.address,
+			delegationApprover: ZeroAddress,
+			stakerOptOutWindowBlocks: 0,
+		},
+		''
+	)
+
+	await tx1.wait()
+
+	console.log('Operator registered on Eigenlayer successfully')
+
+	const salt = hexlify(randomBytes(32))
+	const expiry = Math.floor(Date.now() / 1000) + 3600
+
+	const digestHash =
+		await avsDirectoryContract.calculateOperatorAVSRegistrationDigestHash(
+			await wallet.address,
+			miladyPoolContract.address,
+			salt,
+			expiry
+		)
+
+	const signingKey = new SigningKey(process.env.PRIVATE_KEY as string)
+	const signature = signingKey.sign(digestHash)
+
+	const operatorSignature = {
+		expiry,
+		salt,
+		signature,
+	}
+
+	const tx2 = await stakeRegistryContract.registerOperatorWithSignature(
+		operatorSignature,
+		await wallet.address
+	)
+
+	await tx2.wait()
+	console.log('Operator registered on AVS successfully')
+}
