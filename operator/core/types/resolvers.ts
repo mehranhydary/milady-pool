@@ -19,12 +19,11 @@ export interface Scalars {
 }
 
 export interface CreateOrderInput {
+  amountSpecified: Scalars['String']['input'];
   deadline?: InputMaybe<Scalars['ISO8601Date']['input']>;
   fee: Scalars['String']['input'];
   hooks?: InputMaybe<Scalars['String']['input']>;
-  inputAmount?: InputMaybe<Scalars['String']['input']>;
   orderSignature: Scalars['String']['input'];
-  outputAmount?: InputMaybe<Scalars['String']['input']>;
   permit2Deadline: Scalars['ISO8601Date']['input'];
   permit2Nonce: Scalars['String']['input'];
   permit2Signature: Scalars['String']['input'];
@@ -33,8 +32,8 @@ export interface CreateOrderInput {
   tickToSellAt?: InputMaybe<Scalars['String']['input']>;
   tokenA: Scalars['String']['input'];
   tokenB: Scalars['String']['input'];
-  tokenInput: Scalars['String']['input'];
   trader: Scalars['String']['input'];
+  zeroForOne: Scalars['Boolean']['input'];
 }
 
 export interface Mutation {
@@ -47,18 +46,16 @@ export interface MutationcreateOrderArgs {
 }
 
 export interface Order {
+  amountSpecified: Scalars['String']['output'];
   deadline: Scalars['ISO8601Date']['output'];
   id: Scalars['String']['output'];
-  inputAmount?: Maybe<Scalars['String']['output']>;
   orderSignature: Scalars['String']['output'];
-  outputAmount?: Maybe<Scalars['String']['output']>;
   permit2Deadline: Scalars['ISO8601Date']['output'];
   permit2Nonce: Scalars['String']['output'];
   permit2Signature: Scalars['String']['output'];
   poolKey: PoolKey;
   startTime: Scalars['ISO8601Date']['output'];
   tickToSellAt: Scalars['String']['output'];
-  tokenInput: Scalars['String']['output'];
   trader: Scalars['String']['output'];
   zeroForOne: Scalars['Boolean']['output'];
 }
@@ -179,18 +176,16 @@ export type MutationResolvers<ContextType = GraphqlContext, ParentType extends R
 }>;
 
 export type OrderResolvers<ContextType = GraphqlContext, ParentType extends ResolversParentTypes['Order'] = ResolversParentTypes['Order']> = ResolversObject<{
+  amountSpecified?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   deadline?: Resolver<ResolversTypes['ISO8601Date'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  inputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   orderSignature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  outputAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   permit2Deadline?: Resolver<ResolversTypes['ISO8601Date'], ParentType, ContextType>;
   permit2Nonce?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   permit2Signature?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   poolKey?: Resolver<ResolversTypes['PoolKey'], ParentType, ContextType>;
   startTime?: Resolver<ResolversTypes['ISO8601Date'], ParentType, ContextType>;
   tickToSellAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  tokenInput?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   trader?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   zeroForOne?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

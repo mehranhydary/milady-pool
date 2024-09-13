@@ -12,9 +12,7 @@ CREATE TABLE "Order" (
     "trader" TEXT NOT NULL,
     "tickToSellAt" TEXT NOT NULL,
     "zeroForOne" BOOLEAN NOT NULL,
-    "inputAmount" TEXT,
-    "outputAmount" TEXT,
-    "tokenInput" TEXT NOT NULL,
+    "amountSpecified" TEXT,
     "poolKeyId" TEXT NOT NULL,
     "permit2Signature" TEXT NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
@@ -45,7 +43,7 @@ CREATE INDEX "Order_trader_idx" ON "Order"("trader");
 CREATE INDEX "Order_poolKeyId_idx" ON "Order"("poolKeyId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Order_trader_tickToSellAt_zeroForOne_tokenInput_startTime_p_key" ON "Order"("trader", "tickToSellAt", "zeroForOne", "tokenInput", "startTime", "poolKeyId");
+CREATE UNIQUE INDEX "Order_trader_tickToSellAt_zeroForOne_startTime_poolKeyId_key" ON "Order"("trader", "tickToSellAt", "zeroForOne", "startTime", "poolKeyId");
 
 -- CreateIndex
 CREATE INDEX "PoolKey_token0_idx" ON "PoolKey"("token0");

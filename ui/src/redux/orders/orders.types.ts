@@ -8,14 +8,14 @@ export type OrdersReducers = {}
 
 export interface Order {
 	trader: string
-	tickToSellAt: number
-	tokenInput: string
-	inputAmount: number
-	outputAmount: number
+	tickToSellAt: string
+	amountSpecified: string
 	tokenA: string
 	tokenB: string
-	fee: number
-	tickSpacing: number
+	fee: string
+	tickSpacing: string
 	hooks: string
 	permit2Signature: string
+	permit2Nonce: string
+	permit2Deadline: string
 }

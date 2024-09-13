@@ -11,9 +11,8 @@ export const typeDefs = gql`
 	input CreateOrderInput {
 		trader: String!
 		tickToSellAt: String
-		tokenInput: String!
-		inputAmount: String
-		outputAmount: String
+		amountSpecified: String!
+		zeroForOne: Boolean!
 		tokenA: String!
 		tokenB: String!
 		fee: String!
@@ -33,9 +32,7 @@ export const typeDefs = gql`
 		trader: String!
 		tickToSellAt: String!
 		zeroForOne: Boolean!
-		tokenInput: String!
-		inputAmount: String
-		outputAmount: String
+		amountSpecified: String!
 		# TODO: Add partial fills
 		poolKey: PoolKey!
 		permit2Signature: String!
@@ -90,11 +87,10 @@ export const resolvers: OrdersResolvers = {
 					input: {
 						trader,
 						tickToSellAt,
-						tokenInput,
-						inputAmount,
-						outputAmount,
+						amountSpecified,
 						tokenA,
 						tokenB,
+						zeroForOne,
 						hooks: _hooks,
 						fee,
 						tickSpacing,
@@ -114,13 +110,14 @@ export const resolvers: OrdersResolvers = {
 				// and then create the order
 				// TODO: Once this is done, we should also figure out how to
 				// validate hooks and pool keys on chain
+				if (!amountSpecified)
+					throw new GraphQLError('amountSpecified is required')
 				if (!permit2Deadline)
 					throw new GraphQLError('permit2Deadline is required')
 				const hooks = _hooks || ZeroAddress
 				try {
 					const [token0, token1] =
 						tokenA < tokenB ? [tokenA, tokenB] : [tokenB, tokenA]
-					const zeroForOne = tokenInput === tokenA
 					const poolKey = await db.poolKey.findOrCreate({
 						where: {
 							token0,
@@ -152,7 +149,7 @@ export const resolvers: OrdersResolvers = {
 						where: {
 							trader,
 							poolKeyId: poolKey.id,
-							trader_tickToSellAt_zeroForOne_tokenInput_startTime_poolKeyId:
+							trader_tickToSellAt_zeroForOne_startTime_poolKeyId:
 								{
 									trader,
 									tickToSellAt: tickToSellAt
@@ -160,20 +157,13 @@ export const resolvers: OrdersResolvers = {
 										: '0',
 									zeroForOne,
 									startTime: _startTime,
-									tokenInput,
 									poolKeyId: poolKey.id,
 								},
 						},
 						create: {
 							trader,
 							tickToSellAt: tickToSellAt ? tickToSellAt : '0',
-							inputAmount: inputAmount
-								? inputAmount.toString()
-								: null,
-							outputAmount: outputAmount
-								? outputAmount.toString()
-								: null,
-							tokenInput,
+							amountSpecified,
 							poolKeyId: poolKey.id,
 							permit2Signature,
 							zeroForOne,
