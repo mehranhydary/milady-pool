@@ -53,12 +53,9 @@ const avsDirectoryContract = new Contract(
 const submitValidOrder = async (order: OrderWithPoolKey) => {
 	const abiEncoder = AbiCoder.defaultAbiCoder()
 	const orderEncoded = abiEncoder.encode(
-		['address', 'int24', 'bool', 'int256', 'bytes', 'uint256', 'uint256'],
+		['address', 'bytes', 'uint256', 'uint256'],
 		[
 			order.trader,
-			order.tickToSellAt,
-			order.zeroForOne,
-			order.inputAmount,
 			order.permit2Signature,
 			order.permit2Nonce,
 			order.permit2Deadline,

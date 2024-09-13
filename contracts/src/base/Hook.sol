@@ -73,7 +73,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
     function _beforeSwap(
         address,
         PoolKey calldata key,
-        IPoolManager.SwapParams calldata,
+        IPoolManager.SwapParams calldata params,
         bytes calldata data
     ) internal returns (bytes4, BeforeSwapDelta, uint24) {
         (bytes memory publicValues, bytes memory sig) = abi.decode(
@@ -99,21 +99,18 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
         (
             address walletAddress,
-            int24 tickToSellAt,
-            bool zeroForOne,
-            int256 amountSpecified,
+            // This is the trade secret
             bytes memory permit2Signature,
             uint256 permit2Nonce,
             uint256 permit2Deadline
         ) = (
                 _publicValues.walletAddress,
-                _publicValues.tickToSellAt,
-                _publicValues.zeroForOne,
-                _publicValues.amountSpecified,
                 _publicValues.permit2Signature,
                 _publicValues.permit2Nonce,
                 _publicValues.permit2Deadline
             );
+
+        // NEed to calculate balance delta
 
         // TODO: FIGURE OUT AMOUNT IN AND OUT BASED ON INFO LAID OUT IN THE STRUCT
 
@@ -122,24 +119,25 @@ abstract contract Hook is BaseHook, WyvernInspired {
         // Look here: https://blog.uniswap.org/permit2-integration-guide
 
         // Use Permit2 to transfer tokens from the user to this contract
-        uint256 inputAmount = amountSpecified > 0
-            ? uint256(amountSpecified)
+        uint256 inputAmount = params.amountSpecified > 0
+            ? uint256(params.amountSpecified)
             : _calculateAmountIn(
-                uint256(-amountSpecified),
-                tickToSellAt,
+                uint256(-params.amountSpecified),
+                params.sqrtPriceLimitX96,
                 key.tickSpacing,
-                zeroForOne
+                params.zeroForOne
                     ? Currency.unwrap(key.currency0)
                     : Currency.unwrap(key.currency1),
-                zeroForOne
+                params.zeroForOne
                     ? Currency.unwrap(key.currency1)
                     : Currency.unwrap(key.currency0),
                 key.fee
             );
+
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer
             .PermitTransferFrom({
                 permitted: ISignatureTransfer.TokenPermissions({
-                    token: zeroForOne
+                    token: params.zeroForOne
                         ? Currency.unwrap(key.currency0)
                         : Currency.unwrap(key.currency1),
                     amount: inputAmount
@@ -163,30 +161,36 @@ abstract contract Hook is BaseHook, WyvernInspired {
             permit2Signature
         );
 
-        uint256 outputAmount = amountSpecified > 0
+        uint256 outputAmount = params.amountSpecified > 0
             ? _calculateAmountOut(
-                uint256(amountSpecified),
-                tickToSellAt,
+                uint256(params.amountSpecified),
+                params.sqrtPriceLimitX96,
                 key.tickSpacing,
-                zeroForOne
+                params.zeroForOne
                     ? Currency.unwrap(key.currency0)
                     : Currency.unwrap(key.currency1),
-                zeroForOne
+                params.zeroForOne
                     ? Currency.unwrap(key.currency1)
                     : Currency.unwrap(key.currency0),
                 key.fee
             )
-            : uint256(-amountSpecified);
+            : uint256(-params.amountSpecified);
 
         // TODO: Need to update toBeforeSwapDelta to handle token in and out amounts
         BeforeSwapDelta beforeSwapDelta;
 
         // Calculate the amount out based on the given data
 
-        if (zeroForOne) {
-            beforeSwapDelta = toBeforeSwapDelta(-int128(amountSpecified), 0);
+        if (params.zeroForOne) {
+            beforeSwapDelta = toBeforeSwapDelta(
+                -int128(params.amountSpecified),
+                0
+            );
         } else {
-            beforeSwapDelta = toBeforeSwapDelta(int128(amountSpecified), 0);
+            beforeSwapDelta = toBeforeSwapDelta(
+                int128(params.amountSpecified),
+                0
+            );
         }
 
         // Return the appropriate values
@@ -206,16 +210,15 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
     function _calculateAmountOut(
         uint256 amountIn,
-        int24 tickToSellAt,
+        uint160 sqrtPriceLimitX96,
         int24 tickSpacing,
         address tokenIn,
         address tokenOut,
         uint24 fee
     ) internal pure returns (uint256 amountOut) {
-        uint160 sqrtPriceX96 = TickMath.getSqrtPriceAtTick(tickToSellAt);
         uint256 priceX96 = FullMath.mulDiv(
-            sqrtPriceX96,
-            sqrtPriceX96,
+            sqrtPriceLimitX96,
+            sqrtPriceLimitX96,
             FixedPoint96.Q96
         );
 
@@ -235,16 +238,15 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
     function _calculateAmountIn(
         uint256 amountOut,
-        int24 tickToSellAt,
+        uint160 sqrtPriceLimitX96,
         int24 tickSpacing,
         address tokenIn,
         address tokenOut,
         uint24 fee
     ) internal pure returns (uint256 amountIn) {
-        uint160 sqrtPriceX96 = TickMath.getSqrtPriceAtTick(tickToSellAt);
         uint256 priceX96 = FullMath.mulDiv(
-            sqrtPriceX96,
-            sqrtPriceX96,
+            sqrtPriceLimitX96,
+            sqrtPriceLimitX96,
             FixedPoint96.Q96
         );
 

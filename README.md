@@ -62,3 +62,10 @@ forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --p
 ```
 
 ```
+
+FYI:
+
+<!-- zero for one true, amount specified > 0, exact input of token 0 for token 1 -->
+<!-- zero for one true, amount specified < 0, exact output of token 0 for token 1 -->
+<!-- zero for one false, amount specified < 0, exact output of token 1 for token 0 -->
+<!-- zero for one false, amount specified > 0, exact input of token 1 for token 0 -->
