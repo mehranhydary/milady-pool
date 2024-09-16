@@ -18,16 +18,34 @@ import {IERC20Minimal} from "v4-core/interfaces/external/IERC20Minimal.sol";
 import {ISignatureTransfer} from "permit2/src/interfaces/ISignatureTransfer.sol";
 
 // MiladyPool
+import "../src/MiladyPoolServiceMAnager.sol" as miladyPoolServiceManager;
 import {MiladyPoolOrderManager} from "../src/MiladyPoolOrderManager.sol";
+import {PublicValuesStruct} from "../src/base/Structs.sol";
 
-contract MiladyPoolOrderManagerTest is Test, Deployers {
+// Eigenlyer
+import {BLSMockAVSDeployer} from "@eigenlayer-middleware/test/utils/BLSMockAVSDeployer.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
+contract MiladyPoolOrderManagerTest is BLSMockAVSDeployer, Deployers {
+    miladyPoolServiceManager.MiladyPoolServiceManager sm;
+    miladyPoolServiceManager.MiladyPoolServiceManager smImplementation;
+
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
 
     MiladyPoolOrderManager hook;
+    MiladyPoolOrderManager hookImplementation;
+
     ISignatureTransfer permit2;
 
+    address aggregator =
+        address(uint160(uint256(keccak256(abi.encodePacked("aggregator")))));
+    address generator =
+        address(uint160(uint256(keccak256(abi.encodePacked("generator")))));
+
     function setUp() public {
+        _setUpBLSMockAVSDeployer();
+
         permit2 = ISignatureTransfer(
             0x000000000022D473030F116dDEE9F6B43aC78BA3
         );
@@ -45,60 +63,84 @@ contract MiladyPoolOrderManagerTest is Test, Deployers {
         );
         deployCodeTo(
             "MiladyPoolOrderManager.sol",
-            abi.encode(manager),
+            abi.encode(address(0), manager),
             hookAddress
         );
-        hook = MiladyPoolOrderManager(hookAddress);
 
-        (key, ) = initPool(
-            currency0,
-            currency1,
-            hook,
-            3000,
-            SQRT_PRICE_1_1,
-            ZERO_BYTES
+        hookImplementation = new MiladyPoolOrderManager(
+            miladyPoolServiceManager.IRegistryCoordinator(
+                address(registryCoordinator)
+            ),
+            manager
         );
 
-        IERC20Minimal(Currency.unwrap(key.currency0)).approve(
-            hookAddress,
-            1000 ether
-        );
-        IERC20Minimal(Currency.unwrap(key.currency1)).approve(
-            hookAddress,
-            1000 ether
+        hook = MiladyPoolOrderManager(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(hookImplementation),
+                    address(proxyAdmin),
+                    abi.encodeWithSelector(
+                        hook.initialize.selector,
+                        pauserRegistry,
+                        registryCoordinatorOwner,
+                        aggregator,
+                        generator
+                    )
+                )
+            )
         );
 
-        modifyLiquidityRouter.modifyLiquidity(
-            key,
-            IPoolManager.ModifyLiquidityParams({
-                tickLower: -60,
-                tickUpper: 60,
-                liquidityDelta: 10 ether,
-                salt: bytes32(0)
-            }),
-            ZERO_BYTES
-        );
-        modifyLiquidityRouter.modifyLiquidity(
-            key,
-            IPoolManager.ModifyLiquidityParams({
-                tickLower: -120,
-                tickUpper: 120,
-                liquidityDelta: 10 ether,
-                salt: bytes32(0)
-            }),
-            ZERO_BYTES
-        );
-        // some liquidity for full range
-        modifyLiquidityRouter.modifyLiquidity(
-            key,
-            IPoolManager.ModifyLiquidityParams({
-                tickLower: TickMath.minUsableTick(60),
-                tickUpper: TickMath.maxUsableTick(60),
-                liquidityDelta: 10 ether,
-                salt: bytes32(0)
-            }),
-            ZERO_BYTES
-        );
+        // hook = MiladyPoolOrderManager(hookAddress);
+
+        // (key, ) = initPool(
+        //     currency0,
+        //     currency1,
+        //     hook,
+        //     3000,
+        //     SQRT_PRICE_1_1,
+        //     ZERO_BYTES
+        // );
+
+        // IERC20Minimal(Currency.unwrap(key.currency0)).approve(
+        //     hookAddress,
+        //     1000 ether
+        // );
+        // IERC20Minimal(Currency.unwrap(key.currency1)).approve(
+        //     hookAddress,
+        //     1000 ether
+        // );
+
+        // modifyLiquidityRouter.modifyLiquidity(
+        //     key,
+        //     IPoolManager.ModifyLiquidityParams({
+        //         tickLower: -60,
+        //         tickUpper: 60,
+        //         liquidityDelta: 10 ether,
+        //         salt: bytes32(0)
+        //     }),
+        //     ZERO_BYTES
+        // );
+        // modifyLiquidityRouter.modifyLiquidity(
+        //     key,
+        //     IPoolManager.ModifyLiquidityParams({
+        //         tickLower: -120,
+        //         tickUpper: 120,
+        //         liquidityDelta: 10 ether,
+        //         salt: bytes32(0)
+        //     }),
+        //     ZERO_BYTES
+        // );
+        // // some liquidity for full range
+        // modifyLiquidityRouter.modifyLiquidity(
+        //     key,
+        //     IPoolManager.ModifyLiquidityParams({
+        //         tickLower: TickMath.minUsableTick(60),
+        //         tickUpper: TickMath.maxUsableTick(60),
+        //         liquidityDelta: 10 ether,
+        //         salt: bytes32(0)
+        //     }),
+        //     ZERO_BYTES
+        // );
     }
 
     /**
@@ -123,5 +165,17 @@ contract MiladyPoolOrderManagerTest is Test, Deployers {
                 to: to,
                 requestedAmount: amount
             });
+    }
+
+    function test__createOffchainOrderDetails() public {
+        address trader = address(1);
+        vm.prank(trader);
+        uint256 nonce = 0; // TODO: Figure out how to generate nonces for permit2 (can I use permit2...?)
+        PublicValuesStruct memory publicValues = PublicValuesStruct({
+            walletAddress: trader,
+            permit2Signature: abi.encodePacked(permit2),
+            permit2Nonce: nonce,
+            permit2Deadline: 0
+        });
     }
 }
