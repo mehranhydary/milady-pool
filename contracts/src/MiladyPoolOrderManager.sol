@@ -55,7 +55,7 @@ contract MiladyPoolOrderManager is
 
     function afterInitialize(
         address,
-        PoolKey calldata key,
+        PoolKey calldata,
         uint160,
         int24 tick,
         bytes calldata

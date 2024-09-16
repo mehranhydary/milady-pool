@@ -145,20 +145,21 @@ abstract contract Hook is BaseHook, WyvernInspired {
             permit2Signature
         );
 
+        _settle(
+            params.zeroForOne // Gets the token that is swapped in
+                ? Currency(key.currency0)
+                : Currency(key.currency1),
+            uint128(amountIn)
+        );
+
         // Can skip the entire amount to swap here if we just do the swap here
         // At this point the first token is already in the pool so we need to call _take
         _take(
             params.zeroForOne // Gets the token that is swapped out
                 ? Currency(key.currency1)
                 : Currency(key.currency0),
-            uint128(amountOut)
-        );
-
-        _settle(
-            params.zeroForOne // Gets the token that is swapped in
-                ? Currency(key.currency0)
-                : Currency(key.currency1),
-            uint128(amountIn)
+            uint128(amountOut),
+            walletAddress
         );
 
         // Return the appropriate values
@@ -230,9 +231,9 @@ abstract contract Hook is BaseHook, WyvernInspired {
         poolManager.settle();
     }
 
-    function _take(Currency currency, uint128 amount) internal {
+    function _take(Currency currency, uint128 amount, address trader) internal {
         // Should be used to move the tokens received via permit2 to the pool manager
         poolManager.sync(currency);
-        currency.transfer(address(this), amount);
+        currency.transfer(trader, amount);
     }
 }
