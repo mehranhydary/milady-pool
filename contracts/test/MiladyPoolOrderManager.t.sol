@@ -222,12 +222,19 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         });
 
         bytes32 hashToSign = miladyPoolOrderManager.hashToSign(order);
+        console.log("Hash to sign based on order created");
+        console.logBytes32(hashToSign);
         (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
             hashToSign
         );
 
+        bytes memory encodedPublicValues = abi.encode(order);
         bytes memory encodedSignature = abi.encode(v_, r_, s_);
+        bytes memory swapData = abi.encode(
+            encodedPublicValues,
+            encodedSignature
+        );
 
         PoolKey memory poolKey = PoolKey(
             token0,
@@ -239,9 +246,17 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         IPoolManager.SwapParams memory swapParams = IPoolManager.SwapParams({
             zeroForOne: true,
             amountSpecified: 100,
-            sqrtPriceLimitX96: SQRT_PRICE_1_1
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
         });
-        POOL_MANAGER.swap(key, swapParams, encodedSignature);
+        swapRouter.swap(
+            key,
+            swapParams,
+            PoolSwapTest.TestSettings({
+                takeClaims: false,
+                settleUsingBurn: false
+            }),
+            swapData
+        );
     }
 
     function _getTransferDetails(

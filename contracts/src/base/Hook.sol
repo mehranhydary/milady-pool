@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
+import "forge-std/console.sol";
+import "forge-std/console2.sol";
+
 // Uniswap
 import {BaseHook} from "v4-periphery/src/base/hooks/BaseHook.sol";
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
@@ -72,14 +75,38 @@ abstract contract Hook is BaseHook, WyvernInspired {
             (bytes, bytes)
         );
 
+        console.log("Logging public values encoded public values:");
+        console.logBytes(publicValues);
+
+        console.log("Logging signature:");
+        console.logBytes(sig);
+
         PublicValuesStruct memory _publicValues = abi.decode(
             publicValues,
             (PublicValuesStruct)
         );
 
+        console.log("Logging wallet address:");
+        console.log(_publicValues.walletAddress);
+
+        console.log("Logging permit2 nonce:");
+        console.log(_publicValues.permit2Nonce);
+
+        console.log("Logging permit2 deadline:");
+        console.log(_publicValues.permit2Deadline);
+
         Sig memory _sig = abi.decode(sig, (Sig));
 
-        bytes32 hash = _hashOrder(_publicValues);
+        console.log("Logging signature 'v' value:");
+        console.log(_sig.v);
+        console.log("Logging signature 'r' value:");
+        console.logBytes32(_sig.r);
+        console.log("Logging signature 's' value:");
+        console.logBytes32(_sig.s);
+
+        bytes32 hash = _hashToSign(_publicValues);
+        console.log("Hash from decoded data");
+        console.logBytes32(hash);
 
         if (!_validateOrder(hash, _publicValues, _sig)) {
             revert InvalidOrder();

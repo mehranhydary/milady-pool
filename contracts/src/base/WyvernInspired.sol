@@ -75,7 +75,6 @@ abstract contract WyvernInspired {
         if (order.walletAddress == address(0)) return false;
         if (order.permit2Signature.length == 0) return false;
         if (order.permit2Deadline == 0) return false;
-        if (order.permit2Nonce == 0) return false;
         return true;
     }
 
