@@ -36,7 +36,7 @@ import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 
 contract MiladyPoolDeployer is Test, Utils {
     using PoolIdLibrary for PoolKey;
-    IPoolManager POOL_MANAGER;
+    IPoolManager public POOL_MANAGER;
     ERC20Mock public erc20Mock;
     StrategyBaseTVLLimits public erc20MockStrategy;
 

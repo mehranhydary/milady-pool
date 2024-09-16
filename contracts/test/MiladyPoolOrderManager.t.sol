@@ -168,6 +168,8 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             permit2Nonce: 0,
             permit2Deadline: block.timestamp + 1 days
         });
+
+        bytes32 hashToSign = miladyPoolOrderManager.hashToSign(order);
     }
 
     function _getTransferDetails(

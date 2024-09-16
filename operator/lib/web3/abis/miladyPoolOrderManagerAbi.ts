@@ -118,7 +118,7 @@ export const miladyPoolOrderManagerAbi = [
 		inputs: [
 			{ name: '', type: 'address', internalType: 'address' },
 			{
-				name: 'key',
+				name: '',
 				type: 'tuple',
 				internalType: 'struct PoolKey',
 				components: [
@@ -213,7 +213,7 @@ export const miladyPoolOrderManagerAbi = [
 		type: 'function',
 		name: 'afterSwap',
 		inputs: [
-			{ name: 'sender', type: 'address', internalType: 'address' },
+			{ name: '', type: 'address', internalType: 'address' },
 			{
 				name: 'key',
 				type: 'tuple',
@@ -243,7 +243,7 @@ export const miladyPoolOrderManagerAbi = [
 				],
 			},
 			{
-				name: 'params',
+				name: '',
 				type: 'tuple',
 				internalType: 'struct IPoolManager.SwapParams',
 				components: [
@@ -260,8 +260,8 @@ export const miladyPoolOrderManagerAbi = [
 					},
 				],
 			},
-			{ name: 'delta', type: 'int256', internalType: 'BalanceDelta' },
-			{ name: 'data', type: 'bytes', internalType: 'bytes' },
+			{ name: '', type: 'int256', internalType: 'BalanceDelta' },
+			{ name: '', type: 'bytes', internalType: 'bytes' },
 		],
 		outputs: [
 			{ name: '', type: 'bytes4', internalType: 'bytes4' },
@@ -541,44 +541,6 @@ export const miladyPoolOrderManagerAbi = [
 						type: 'address',
 						internalType: 'address',
 					},
-					{
-						name: 'tickToSellAt',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'zeroForOne', type: 'bool', internalType: 'bool' },
-					{
-						name: 'inputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'outputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'tokenInput',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token0',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token1',
-						type: 'address',
-						internalType: 'address',
-					},
-					{ name: 'fee', type: 'uint24', internalType: 'uint24' },
-					{
-						name: 'tickSpacing',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'hooks', type: 'address', internalType: 'address' },
 					{
 						name: 'permit2Signature',
 						type: 'bytes',
@@ -888,16 +850,6 @@ export const miladyPoolOrderManagerAbi = [
 	},
 	{
 		type: 'function',
-		name: 'getLowerUsableTick',
-		inputs: [
-			{ name: 'tick', type: 'int24', internalType: 'int24' },
-			{ name: 'tickSpacing', type: 'int24', internalType: 'int24' },
-		],
-		outputs: [{ name: '', type: 'int24', internalType: 'int24' }],
-		stateMutability: 'pure',
-	},
-	{
-		type: 'function',
 		name: 'getOperatorState',
 		inputs: [
 			{
@@ -999,44 +951,6 @@ export const miladyPoolOrderManagerAbi = [
 						internalType: 'address',
 					},
 					{
-						name: 'tickToSellAt',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'zeroForOne', type: 'bool', internalType: 'bool' },
-					{
-						name: 'inputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'outputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'tokenInput',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token0',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token1',
-						type: 'address',
-						internalType: 'address',
-					},
-					{ name: 'fee', type: 'uint24', internalType: 'uint24' },
-					{
-						name: 'tickSpacing',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'hooks', type: 'address', internalType: 'address' },
-					{
 						name: 'permit2Signature',
 						type: 'bytes',
 						internalType: 'bytes',
@@ -1072,44 +986,6 @@ export const miladyPoolOrderManagerAbi = [
 						internalType: 'address',
 					},
 					{
-						name: 'tickToSellAt',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'zeroForOne', type: 'bool', internalType: 'bool' },
-					{
-						name: 'inputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'outputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'tokenInput',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token0',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token1',
-						type: 'address',
-						internalType: 'address',
-					},
-					{ name: 'fee', type: 'uint24', internalType: 'uint24' },
-					{
-						name: 'tickSpacing',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'hooks', type: 'address', internalType: 'address' },
-					{
 						name: 'permit2Signature',
 						type: 'bytes',
 						internalType: 'bytes',
@@ -1143,13 +1019,6 @@ export const miladyPoolOrderManagerAbi = [
 		],
 		outputs: [],
 		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'lastTicks',
-		inputs: [{ name: 'poolId', type: 'bytes32', internalType: 'PoolId' }],
-		outputs: [{ name: 'lastTick', type: 'int24', internalType: 'int24' }],
-		stateMutability: 'view',
 	},
 	{
 		type: 'function',
@@ -1203,13 +1072,6 @@ export const miladyPoolOrderManagerAbi = [
 				internalType: 'contract IPauserRegistry',
 			},
 		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'pendingOrders',
-		inputs: [{ name: '', type: 'bytes', internalType: 'bytes' }],
-		outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
 		stateMutability: 'view',
 	},
 	{
@@ -1376,44 +1238,6 @@ export const miladyPoolOrderManagerAbi = [
 						internalType: 'address',
 					},
 					{
-						name: 'tickToSellAt',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'zeroForOne', type: 'bool', internalType: 'bool' },
-					{
-						name: 'inputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'outputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'tokenInput',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token0',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token1',
-						type: 'address',
-						internalType: 'address',
-					},
-					{ name: 'fee', type: 'uint24', internalType: 'uint24' },
-					{
-						name: 'tickSpacing',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'hooks', type: 'address', internalType: 'address' },
-					{
 						name: 'permit2Signature',
 						type: 'bytes',
 						internalType: 'bytes',
@@ -1458,44 +1282,6 @@ export const miladyPoolOrderManagerAbi = [
 						type: 'address',
 						internalType: 'address',
 					},
-					{
-						name: 'tickToSellAt',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'zeroForOne', type: 'bool', internalType: 'bool' },
-					{
-						name: 'inputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'outputAmount',
-						type: 'uint256',
-						internalType: 'uint256',
-					},
-					{
-						name: 'tokenInput',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token0',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'token1',
-						type: 'address',
-						internalType: 'address',
-					},
-					{ name: 'fee', type: 'uint24', internalType: 'uint24' },
-					{
-						name: 'tickSpacing',
-						type: 'int24',
-						internalType: 'int24',
-					},
-					{ name: 'hooks', type: 'address', internalType: 'address' },
 					{
 						name: 'permit2Signature',
 						type: 'bytes',
@@ -1628,6 +1414,19 @@ export const miladyPoolOrderManagerAbi = [
 	},
 	{
 		type: 'event',
+		name: 'PriceUpdated',
+		inputs: [
+			{
+				name: 'currentSqrtPriceX96',
+				type: 'uint160',
+				indexed: false,
+				internalType: 'uint160',
+			},
+		],
+		anonymous: false,
+	},
+	{
+		type: 'event',
 		name: 'StaleStakesForbiddenUpdate',
 		inputs: [
 			{
@@ -1635,19 +1434,6 @@ export const miladyPoolOrderManagerAbi = [
 				type: 'bool',
 				indexed: false,
 				internalType: 'bool',
-			},
-		],
-		anonymous: false,
-	},
-	{
-		type: 'event',
-		name: 'TickUpdated',
-		inputs: [
-			{
-				name: 'tick',
-				type: 'int24',
-				indexed: false,
-				internalType: 'int24',
 			},
 		],
 		anonymous: false,
@@ -1679,4 +1465,5 @@ export const miladyPoolOrderManagerAbi = [
 	{ type: 'error', name: 'NotPoolManager', inputs: [] },
 	{ type: 'error', name: 'NotSelf', inputs: [] },
 	{ type: 'error', name: 'NothingToClaim', inputs: [] },
+	{ type: 'error', name: 'UnsafeCast', inputs: [] },
 ]
