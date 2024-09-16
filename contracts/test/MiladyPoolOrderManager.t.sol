@@ -57,6 +57,8 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
     ISignatureTransfer PERMIT2;
 
     IPoolManager POOL_MANAGER;
+    Currency token0;
+    Currency token1;
 
     address constant CREATE2_DEPLOYER =
         address(0x4e59b44847b379578588920cA78FbF26c0B4956C);
@@ -94,7 +96,7 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
 
     function setUp() public {
         // Permit2 Setup
-        vm.startPrank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+
         PERMIT2 = ISignatureTransfer(
             0x000000000022D473030F116dDEE9F6B43aC78BA3
         );
@@ -105,7 +107,9 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
         POOL_MANAGER = manager;
 
         // Mock Tokens Setup
-        (currency0, currency1) = deployMintAndApprove2Currencies();
+        (token0, token1) = deployMintAndApprove2Currencies();
+
+        vm.startPrank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
 
         string memory eigenlayerDeployedContracts = readOutput(
             "eigenlayer_deployment_output"
@@ -161,8 +165,8 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
         );
 
         (key, ) = initPool(
-            currency0,
-            currency1,
+            token0,
+            token1,
             hooksUseable,
             3000,
             SQRT_PRICE_1_1,
@@ -175,6 +179,7 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
             address(hooksUseable),
             1000 ether
         );
+
         IERC20Minimal(Currency.unwrap(key.currency1)).approve(
             address(hooksUseable),
             1000 ether
@@ -213,6 +218,44 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
         );
     }
 
+    /**
+      1. Get permit2 signature for the trade you want to do
+      2. Take the permit2 details and create an order
+      3. Take the order and create a hash
+      4. Sign the hash  and store it somewhere
+      5. Call swap with the order details, hash, etc. 
+      6. See how it goes down!
+   */
+
+    function _getTransferDetails(
+        address to,
+        uint256 amount
+    )
+        private
+        pure
+        returns (ISignatureTransfer.SignatureTransferDetails memory)
+    {
+        return
+            ISignatureTransfer.SignatureTransferDetails({
+                to: to,
+                requestedAmount: amount
+            });
+    }
+
+    function test__createOffchainOrderDetails() public {
+        address trader = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        uint256 totalAmount = type(uint256).max;
+        IERC20Minimal(Currency.unwrap(token0)).approve(
+            address(PERMIT2),
+            totalAmount
+        );
+
+        IERC20Minimal(Currency.unwrap(token1)).approve(
+            address(PERMIT2),
+            totalAmount
+        );
+    }
+
     function _deployErc20AndStrategyAndWhitelistStrategy(
         ProxyAdmin eigenLayerProxyAdmin,
         PauserRegistry eigenLayerPauserReg,
@@ -236,7 +279,6 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
                 )
             )
         );
-        console.log("Deployed StrategyBaseTVLLimits");
         IStrategy[] memory strats = new IStrategy[](1);
         strats[0] = erc20MockStrategy;
         bool[] memory thirdPartyTransfersForbiddenValues = new bool[](1);
@@ -476,41 +518,5 @@ contract MiladyPoolOrderManagerTest is Test, Deployers, Utils {
             )
         );
         hooksUseable = IHooks(hookAddress);
-    }
-
-    /**
-      1. Get permit2 signature for the trade you want to do
-      2. Take the permit2 details and create an order
-      3. Take the order and create a hash
-      4. Sign the hash  and store it somewhere
-      5. Call swap with the order details, hash, etc. 
-      6. See how it goes down!
-   */
-
-    function _getTransferDetails(
-        address to,
-        uint256 amount
-    )
-        private
-        pure
-        returns (ISignatureTransfer.SignatureTransferDetails memory)
-    {
-        return
-            ISignatureTransfer.SignatureTransferDetails({
-                to: to,
-                requestedAmount: amount
-            });
-    }
-
-    function test__createOffchainOrderDetails() public {
-        address trader = address(1);
-        vm.prank(trader);
-        uint256 nonce = 0; // TODO: Figure out how to generate nonces for permit2 (can I use permit2...?)
-        PublicValuesStruct memory publicValues = PublicValuesStruct({
-            walletAddress: trader,
-            permit2Signature: abi.encodePacked(PERMIT2),
-            permit2Nonce: nonce,
-            permit2Deadline: 0
-        });
     }
 }
