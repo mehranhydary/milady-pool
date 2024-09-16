@@ -160,17 +160,13 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             permit,
             PERMIT2.DOMAIN_SEPARATOR()
         );
-        console.log("msgHash");
-        console.logBytes32(msgHash);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             // Need to pass in a pk (generic one from Anvil / Foundry)
             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
             msgHash
         );
 
-        console.log("Signature with everything");
         bytes memory permit2Sig = bytes.concat(r, s, bytes1(v));
-        console.logBytes(permit2Sig);
 
         PublicValuesStruct memory order = PublicValuesStruct({
             walletAddress: trader,
@@ -180,8 +176,6 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         });
 
         bytes32 hashToSign = miladyPoolOrderManager.hashToSign(order);
-        console.log("Hash to sign based on order created");
-        console.logBytes32(hashToSign);
         (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
             hashToSign

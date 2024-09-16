@@ -157,7 +157,6 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
         // Can skip the entire amount to swap here if we just do the swap here
         // At this point the first token is already in the pool so we need to call _take
-        console.log("Amount out: %d", amountOut);
         _take(
             params.zeroForOne // Gets the token that is swapped out
                 ? Currency(key.currency1)
