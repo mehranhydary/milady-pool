@@ -170,6 +170,78 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         });
 
         bytes32 hashToSign = miladyPoolOrderManager.hashToSign(order);
+        require(hashToSign != bytes32(0), "Hash is zero");
+        vm.stopPrank();
+    }
+
+    function test__useOffchainOrderDetailsToSwap() public {
+        address trader = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        uint256 totalAmount = type(uint256).max;
+
+        vm.startPrank(trader);
+        // Approve tokens for PERMIT2
+        IERC20Minimal(Currency.unwrap(token0)).approve(
+            address(PERMIT2),
+            totalAmount
+        );
+
+        IERC20Minimal(Currency.unwrap(token1)).approve(
+            address(PERMIT2),
+            totalAmount
+        );
+
+        // Swap amount: 100 * 10e18 tokens
+        uint256 swapAmount = 100 * 10 ** 18;
+
+        ISignatureTransfer.TokenPermissions
+            memory permittedToken0 = _getTokenPermissions(
+                Currency.unwrap(token0),
+                swapAmount
+            );
+        ISignatureTransfer.PermitTransferFrom
+            memory permit = _getPermitTransferFrom(
+                permittedToken0,
+                0,
+                block.timestamp + 1 days
+            );
+        bytes32 msgHash = _getPermitTransferMsgHash(
+            permit,
+            PERMIT2.DOMAIN_SEPARATOR()
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            // Need to pass in a pk (generic one from Anvil / Foundry)
+            0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
+            msgHash
+        );
+
+        PublicValuesStruct memory order = PublicValuesStruct({
+            walletAddress: trader,
+            permit2Signature: abi.encode(v, r, s),
+            permit2Nonce: 0,
+            permit2Deadline: block.timestamp + 1 days
+        });
+
+        bytes32 hashToSign = miladyPoolOrderManager.hashToSign(order);
+        (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
+            0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
+            hashToSign
+        );
+
+        bytes memory encodedSignature = abi.encode(v_, r_, s_);
+
+        PoolKey memory poolKey = PoolKey(
+            token0,
+            token1,
+            3000,
+            int24((3000 / 100) * 2),
+            hooksUseable
+        );
+        IPoolManager.SwapParams memory swapParams = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_PRICE_1_1
+        });
+        POOL_MANAGER.swap(key, swapParams, encodedSignature);
     }
 
     function _getTransferDetails(
