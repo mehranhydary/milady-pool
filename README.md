@@ -56,7 +56,14 @@ forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --p
 7. Next, start the operator. Run `cd operator` to change into the AVS server folder
 8. Run `yarn` to install all dependencies
 9. Run `cp .env.example .env` and update your `.env` accordingly
-10. ...
+10. You should also deploy permit2. It will deploy at `0x000000000022D473030F116dDEE9F6B43aC78BA3`.
+
+```sh
+cd contracts/lib/v4-periphery/lib/permit2
+
+forge script script/DeployPermit2.s.sol --rpc-url http://localhost:8545 --private-key \
+0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
+```
 
 ```
 

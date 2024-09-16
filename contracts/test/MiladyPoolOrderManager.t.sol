@@ -54,8 +54,6 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         );
 
     function setUp() public {
-        // Permit2 Setup
-
         PERMIT2 = ISignatureTransfer(
             0x000000000022D473030F116dDEE9F6B43aC78BA3
         );
@@ -94,7 +92,7 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             IPoolManager.ModifyLiquidityParams({
                 tickLower: -60,
                 tickUpper: 60,
-                liquidityDelta: 10 ether,
+                liquidityDelta: 1000 ether,
                 salt: bytes32(0)
             }),
             ZERO_BYTES
@@ -104,7 +102,7 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             IPoolManager.ModifyLiquidityParams({
                 tickLower: -120,
                 tickUpper: 120,
-                liquidityDelta: 10 ether,
+                liquidityDelta: 1000 ether,
                 salt: bytes32(0)
             }),
             ZERO_BYTES
@@ -115,69 +113,21 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             IPoolManager.ModifyLiquidityParams({
                 tickLower: TickMath.minUsableTick(60),
                 tickUpper: TickMath.maxUsableTick(60),
-                liquidityDelta: 10 ether,
+                liquidityDelta: 1000 ether,
                 salt: bytes32(0)
             }),
             ZERO_BYTES
         );
     }
 
-    function test__createOffchainOrderDetails() public {
-        address trader = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
-        uint256 totalAmount = type(uint256).max;
-
-        vm.startPrank(trader);
-        // Approve tokens for PERMIT2
-        IERC20Minimal(Currency.unwrap(token0)).approve(
-            address(PERMIT2),
-            totalAmount
-        );
-
-        IERC20Minimal(Currency.unwrap(token1)).approve(
-            address(PERMIT2),
-            totalAmount
-        );
-
-        // Swap amount: 100 * 10e18 tokens
-        uint256 swapAmount = 100 * 10 ** 18;
-
-        ISignatureTransfer.TokenPermissions
-            memory permittedToken0 = _getTokenPermissions(
-                Currency.unwrap(token0),
-                swapAmount
-            );
-        ISignatureTransfer.PermitTransferFrom
-            memory permit = _getPermitTransferFrom(
-                permittedToken0,
-                0,
-                block.timestamp + 1 days
-            );
-        bytes32 msgHash = _getPermitTransferMsgHash(
-            permit,
-            PERMIT2.DOMAIN_SEPARATOR()
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            // Need to pass in a pk (generic one from Anvil / Foundry)
-            0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
-            msgHash
-        );
-
-        PublicValuesStruct memory order = PublicValuesStruct({
-            walletAddress: trader,
-            permit2Signature: abi.encode(v, r, s),
-            permit2Nonce: 0,
-            permit2Deadline: block.timestamp + 1 days
-        });
-
-        bytes32 hashToSign = miladyPoolOrderManager.hashToSign(order);
-        require(hashToSign != bytes32(0), "Hash is zero");
-        vm.stopPrank();
-    }
-
     function test__useOffchainOrderDetailsToSwap() public {
         address trader = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         uint256 totalAmount = type(uint256).max;
 
+        // Move some tokens into trader wallet
+        deal(Currency.unwrap(token0), trader, 1000 * 10 ** 18);
+        deal(Currency.unwrap(token1), trader, 1000 * 10 ** 18);
+
         vm.startPrank(trader);
         // Approve tokens for PERMIT2
         IERC20Minimal(Currency.unwrap(token0)).approve(
@@ -198,25 +148,33 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
                 Currency.unwrap(token0),
                 swapAmount
             );
+
         ISignatureTransfer.PermitTransferFrom
             memory permit = _getPermitTransferFrom(
                 permittedToken0,
                 0,
                 block.timestamp + 1 days
             );
+
         bytes32 msgHash = _getPermitTransferMsgHash(
             permit,
             PERMIT2.DOMAIN_SEPARATOR()
         );
+        console.log("msgHash");
+        console.logBytes32(msgHash);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             // Need to pass in a pk (generic one from Anvil / Foundry)
             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
             msgHash
         );
 
+        console.log("Signature with everything");
+        bytes memory permit2Sig = bytes.concat(r, s, bytes1(v));
+        console.logBytes(permit2Sig);
+
         PublicValuesStruct memory order = PublicValuesStruct({
             walletAddress: trader,
-            permit2Signature: abi.encode(v, r, s),
+            permit2Signature: permit2Sig,
             permit2Nonce: 0,
             permit2Deadline: block.timestamp + 1 days
         });
@@ -243,11 +201,13 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             int24((3000 / 100) * 2),
             hooksUseable
         );
+
         IPoolManager.SwapParams memory swapParams = IPoolManager.SwapParams({
             zeroForOne: true,
-            amountSpecified: 100,
+            amountSpecified: 100 * 10 ** 18,
             sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
         });
+
         swapRouter.swap(
             key,
             swapParams,
@@ -259,25 +219,10 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         );
     }
 
-    function _getTransferDetails(
-        address to,
-        uint256 amount
-    )
-        private
-        pure
-        returns (ISignatureTransfer.SignatureTransferDetails memory)
-    {
-        return
-            ISignatureTransfer.SignatureTransferDetails({
-                to: to,
-                requestedAmount: amount
-            });
-    }
-
     function _getTokenPermissions(
         address token,
         uint256 amount
-    ) internal returns (ISignatureTransfer.TokenPermissions memory) {
+    ) internal pure returns (ISignatureTransfer.TokenPermissions memory) {
         return
             ISignatureTransfer.TokenPermissions({token: token, amount: amount});
     }
@@ -286,7 +231,7 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         ISignatureTransfer.TokenPermissions memory permitted,
         uint256 nonce,
         uint256 deadline
-    ) internal returns (ISignatureTransfer.PermitTransferFrom memory) {
+    ) internal pure returns (ISignatureTransfer.PermitTransferFrom memory) {
         return
             ISignatureTransfer.PermitTransferFrom({
                 permitted: permitted,
@@ -311,7 +256,8 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
                     abi.encode(
                         PERMIT_TRANSFER_FROM_TYPEHASH,
                         tokenPermissions,
-                        address(this),
+                        // NOTE: should be the verifying contract (i.e. the spender)
+                        address(hooksUseable),
                         permit.nonce,
                         permit.deadline
                     )

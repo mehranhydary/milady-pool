@@ -75,38 +75,14 @@ abstract contract Hook is BaseHook, WyvernInspired {
             (bytes, bytes)
         );
 
-        console.log("Logging public values encoded public values:");
-        console.logBytes(publicValues);
-
-        console.log("Logging signature:");
-        console.logBytes(sig);
-
         PublicValuesStruct memory _publicValues = abi.decode(
             publicValues,
             (PublicValuesStruct)
         );
 
-        console.log("Logging wallet address:");
-        console.log(_publicValues.walletAddress);
-
-        console.log("Logging permit2 nonce:");
-        console.log(_publicValues.permit2Nonce);
-
-        console.log("Logging permit2 deadline:");
-        console.log(_publicValues.permit2Deadline);
-
         Sig memory _sig = abi.decode(sig, (Sig));
 
-        console.log("Logging signature 'v' value:");
-        console.log(_sig.v);
-        console.log("Logging signature 'r' value:");
-        console.logBytes32(_sig.r);
-        console.log("Logging signature 's' value:");
-        console.logBytes32(_sig.s);
-
         bytes32 hash = _hashToSign(_publicValues);
-        console.log("Hash from decoded data");
-        console.logBytes32(hash);
 
         if (!_validateOrder(hash, _publicValues, _sig)) {
             revert InvalidOrder();
@@ -117,7 +93,6 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
         (
             address walletAddress,
-            // This is the trade secret
             bytes memory permit2Signature,
             uint256 permit2Nonce,
             uint256 permit2Deadline
@@ -131,7 +106,6 @@ abstract contract Hook is BaseHook, WyvernInspired {
         (uint160 sqrtPriceX96, , , ) = poolManager.getSlot0(key.toId());
 
         uint128 liquidity = poolManager.getLiquidity(key.toId());
-
         (
             // TODO: Figure out if this is the beforeSwapDelta we pass back
             // or if it is fine because we are conducting the swap here
@@ -141,7 +115,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
         ) = _getSwapDeltas(
                 sqrtPriceX96,
-                liquidity, // TODO: Confirm this is the right one to use
+                liquidity,
                 params.amountSpecified,
                 params.zeroForOne
             );
@@ -153,6 +127,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
                         ? Currency.unwrap(key.currency0)
                         : Currency.unwrap(key.currency1),
                     amount: amountIn // NOTE: This is the amount of the token that is swapped in (should confirm that it is the amount specified)
+                    // amount: 100 * 10 ** 18
                 }),
                 nonce: permit2Nonce,
                 deadline: permit2Deadline
@@ -162,6 +137,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
             memory transferDetails = ISignatureTransfer
                 .SignatureTransferDetails({
                     to: address(this),
+                    // requestedAmount: 100 * 10 ** 18
                     requestedAmount: amountIn
                 });
 
@@ -181,6 +157,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
         // Can skip the entire amount to swap here if we just do the swap here
         // At this point the first token is already in the pool so we need to call _take
+        console.log("Amount out: %d", amountOut);
         _take(
             params.zeroForOne // Gets the token that is swapped out
                 ? Currency(key.currency1)
@@ -260,7 +237,6 @@ abstract contract Hook is BaseHook, WyvernInspired {
 
     function _take(Currency currency, uint128 amount, address trader) internal {
         // Should be used to move the tokens received via permit2 to the pool manager
-        poolManager.sync(currency);
-        currency.transfer(trader, amount);
+        poolManager.take(currency, trader, amount);
     }
 }

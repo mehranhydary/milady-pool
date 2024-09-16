@@ -8,22 +8,10 @@ import {PublicValuesStruct, Sig} from "./Structs.sol";
 abstract contract WyvernInspired {
     mapping(bytes32 => bool) public cancelledOrFinalized;
 
-    function hashOrder(
-        PublicValuesStruct memory _publicValues
-    ) public pure returns (bytes32) {
-        return _hashOrder(_publicValues);
-    }
-
     function hashToSign(
         PublicValuesStruct memory _publicValues
     ) public pure returns (bytes32) {
         return _hashToSign(_publicValues);
-    }
-
-    function validateOrderParameters(
-        PublicValuesStruct memory order
-    ) public view returns (bool) {
-        return _validateOrderParameters(order);
     }
 
     function validateOrder(
