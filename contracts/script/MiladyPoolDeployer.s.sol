@@ -38,12 +38,9 @@ import "forge-std/console.sol";
 import "forge-std/console2.sol";
 
 contract MiladyPoolDeployer is Script, Utils {
-    // TODO: Constants that we may need should be defined here
     address constant CREATE2_DEPLOYER =
         address(0x4e59b44847b379578588920cA78FbF26c0B4956C);
 
-    // TODO: Replace with actual pool manager
-    // IPoolManager POOL_MANAGER = _deployPoolManager();
     IPoolManager POOL_MANAGER =
         IPoolManager(address(0xc5a5C42992dECbae36851359345FE25997F5C42d));
 
