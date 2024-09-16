@@ -19,6 +19,7 @@ import {BLSSignatureChecker, IRegistryCoordinator} from "@eigenlayer-middleware/
 import {OperatorStateRetriever} from "@eigenlayer-middleware/src/OperatorStateRetriever.sol";
 import "@eigenlayer-middleware/src/libraries/BN254.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
+import {MiladyPoolMath} from "./libraries/MiladyPoolMath.sol";
 
 // Custom:
 import "./interfaces/IMiladyPoolOrderManager.sol";
@@ -74,7 +75,7 @@ contract MiladyPoolOrderManager is
         (
             bytes4 selector,
             BeforeSwapDelta delta,
-            // TODO: Figure out what this is
+            // TODO: Figure out what this is (not needed for now)
             uint24 lpFeeOverride
         ) = _beforeSwap(sender, key, params, data);
         // TODO: Come back to this to emit an event
@@ -83,27 +84,14 @@ contract MiladyPoolOrderManager is
     }
 
     function afterSwap(
-        address sender,
+        address,
         PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        BalanceDelta delta,
-        bytes calldata data
+        IPoolManager.SwapParams calldata,
+        BalanceDelta,
+        bytes calldata
     ) external override onlyByPoolManager returns (bytes4, int128) {
         (, int24 currentTick, , ) = poolManager.getSlot0(key.toId());
         emit PriceUpdated(TickMath.getSqrtPriceAtTick(currentTick));
         return (this.afterSwap.selector, 0);
-    }
-
-    function getLowerUsableTick(
-        int24 tick,
-        int24 tickSpacing
-    ) public pure returns (int24) {
-        int24 intervals = tick / tickSpacing;
-
-        if (tick < 0 && tick % tickSpacing != 0) {
-            intervals--;
-        }
-
-        return intervals * tickSpacing;
     }
 }

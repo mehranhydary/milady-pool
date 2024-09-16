@@ -9,7 +9,6 @@ This app has 4 parts.
 1. UI
 2. AVS
 3. Contracts
-4. ZKP
 
 ### User Interface
 

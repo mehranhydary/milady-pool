@@ -36,7 +36,6 @@ const serverCleanup = useServer(
 			const requestId = msg.id || v4()
 			return {
 				getDb,
-				// user: null,
 				requestId,
 			}
 		},

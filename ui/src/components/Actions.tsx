@@ -2,7 +2,6 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi'
 
 const Actions = ({ createOrder }: { createOrder: () => Promise<void> }) => {
 	const [selectedIncrement, setSelectedIncrement] = useState('1 day')
@@ -10,16 +9,10 @@ const Actions = ({ createOrder }: { createOrder: () => Promise<void> }) => {
 	const handleIncrementClick = (increment: string) => {
 		setSelectedIncrement(increment)
 	}
-	const { connectors, connect } = useConnect()
-	const { address } = useAccount()
-	const { disconnect } = useDisconnect()
-	const { data: balance } = useBalance({ address })
 
 	const onCreateOrderClick = async () => {
-		console.log('Create order button clicked')
 		await createOrder()
 		toast.success('Order created')
-		// Add further logic to handle order creation here
 	}
 
 	return (

@@ -17,6 +17,7 @@ import {PublicValuesStruct, Sig} from "./Structs.sol";
 import {ISignatureTransfer} from "permit2/src/interfaces/ISignatureTransfer.sol";
 import {FixedPoint96} from "v4-core/libraries/FixedPoint96.sol";
 import {FullMath} from "v4-core/libraries/FullMath.sol";
+import {MiladyPoolMath} from "../libraries/MiladyPoolMath.sol";
 
 abstract contract Hook is BaseHook, WyvernInspired {
     using StateLibrary for IPoolManager;
@@ -26,9 +27,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
     // TODO: Hardcoded for now, should update so that we pass it in
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
-    // TODO: Figure out if we need latest order id, order hashes, zkps, matching order ids, responses, challenges, etc.
-    mapping(PoolId poolId => int24 lastTick) public lastTicks;
-    mapping(bytes => bool) public pendingOrders;
+    // Handle before swap balance delta and claims with 6909
 
     // Errors
     error InvalidOrder();
@@ -102,28 +101,22 @@ abstract contract Hook is BaseHook, WyvernInspired {
                 _publicValues.permit2Deadline
             );
 
-        // NEed to calculate balance delta
+        (uint160 sqrtPriceX96, , , ) = poolManager.getSlot0(key.toId());
 
-        // TODO: FIGURE OUT AMOUNT IN AND OUT BASED ON INFO LAID OUT IN THE STRUCT
+        uint128 liquidity = poolManager.getLiquidity(key.toId());
 
-        // TODO: Refactor this section; not gonna work because
-        // you have to activate the permit 2 signature
-        // Look here: https://blog.uniswap.org/permit2-integration-guide
+        (
+            // TODO: Figure out if this is the beforeSwapDelta we pass back
+            // or if it is fine because we are conducting the swap here
+            BeforeSwapDelta beforeSwapDelta,
+            uint256 amountOut,
+            uint256 amountIn,
 
-        // Use Permit2 to transfer tokens from the user to this contract
-        uint256 inputAmount = params.amountSpecified > 0
-            ? uint256(params.amountSpecified)
-            : _calculateAmountIn(
-                uint256(-params.amountSpecified),
-                params.sqrtPriceLimitX96,
-                key.tickSpacing,
+        ) = _getSwapDeltas(
+                sqrtPriceX96,
+                liquidity, // TODO: Confirm this is the right one to use
+                params.amountSpecified,
                 params.zeroForOne
-                    ? Currency.unwrap(key.currency0)
-                    : Currency.unwrap(key.currency1),
-                params.zeroForOne
-                    ? Currency.unwrap(key.currency1)
-                    : Currency.unwrap(key.currency0),
-                key.fee
             );
 
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer
@@ -132,7 +125,7 @@ abstract contract Hook is BaseHook, WyvernInspired {
                     token: params.zeroForOne
                         ? Currency.unwrap(key.currency0)
                         : Currency.unwrap(key.currency1),
-                    amount: inputAmount
+                    amount: amountIn // NOTE: This is the amount of the token that is swapped in (should confirm that it is the amount specified)
                 }),
                 nonce: permit2Nonce,
                 deadline: permit2Deadline
@@ -142,10 +135,9 @@ abstract contract Hook is BaseHook, WyvernInspired {
             memory transferDetails = ISignatureTransfer
                 .SignatureTransferDetails({
                     to: address(this),
-                    requestedAmount: inputAmount
+                    requestedAmount: amountIn
                 });
 
-        // Assuming PERMIT2 is a constant address of the Permit2 contract
         ISignatureTransfer(PERMIT2).permitTransferFrom(
             permit,
             transferDetails,
@@ -153,95 +145,94 @@ abstract contract Hook is BaseHook, WyvernInspired {
             permit2Signature
         );
 
-        uint256 outputAmount = params.amountSpecified > 0
-            ? _calculateAmountOut(
-                uint256(params.amountSpecified),
-                params.sqrtPriceLimitX96,
-                key.tickSpacing,
-                params.zeroForOne
-                    ? Currency.unwrap(key.currency0)
-                    : Currency.unwrap(key.currency1),
-                params.zeroForOne
-                    ? Currency.unwrap(key.currency1)
-                    : Currency.unwrap(key.currency0),
-                key.fee
-            )
-            : uint256(-params.amountSpecified);
+        // Can skip the entire amount to swap here if we just do the swap here
+        // At this point the first token is already in the pool so we need to call _take
+        _take(
+            params.zeroForOne // Gets the token that is swapped out
+                ? Currency(key.currency1)
+                : Currency(key.currency0),
+            uint128(amountOut)
+        );
 
-        // TODO: Need to update toBeforeSwapDelta to handle token in and out amounts
-        BeforeSwapDelta beforeSwapDelta;
-
-        // Calculate the amount out based on the given data
-
-        if (params.zeroForOne) {
-            beforeSwapDelta = toBeforeSwapDelta(
-                -int128(params.amountSpecified),
-                0
-            );
-        } else {
-            beforeSwapDelta = toBeforeSwapDelta(
-                int128(params.amountSpecified),
-                0
-            );
-        }
+        _settle(
+            params.zeroForOne // Gets the token that is swapped in
+                ? Currency(key.currency0)
+                : Currency(key.currency1),
+            uint128(amountIn)
+        );
 
         // Return the appropriate values
         return (this.beforeSwap.selector, beforeSwapDelta, 0);
     }
 
-    function _calculateAmountOut(
-        uint256 amountIn,
-        uint160 sqrtPriceLimitX96,
-        int24 tickSpacing,
-        address tokenIn,
-        address tokenOut,
-        uint24 fee
-    ) internal pure returns (uint256 amountOut) {
-        uint256 priceX96 = FullMath.mulDiv(
-            sqrtPriceLimitX96,
-            sqrtPriceLimitX96,
-            FixedPoint96.Q96
-        );
-
-        // Calculate the amount out before fees
-        if (tokenIn < tokenOut) {
-            // token0 to token1
-            amountOut = FullMath.mulDiv(amountIn, priceX96, FixedPoint96.Q96);
+    // TODO: Update so that the PoolKey sqrtPriceCurrentX96, liquidity are what you need
+    function _getSwapDeltas(
+        uint160 sqrtPriceCurrentX96,
+        uint128 liquidity,
+        int256 amountSpecified,
+        bool zeroForOne
+    )
+        internal
+        view
+        returns (
+            BeforeSwapDelta beforeSwapDelta,
+            uint256 amountOut,
+            uint256 amountIn,
+            uint160 sqrtPriceX96Next
+        )
+    {
+        if (amountSpecified > 0) {
+            amountOut = uint256(amountSpecified);
+            if (zeroForOne) {
+                (amountIn, , sqrtPriceX96Next) = MiladyPoolMath
+                    .getSwapAmountsFromAmount0(
+                        sqrtPriceCurrentX96,
+                        liquidity,
+                        amountOut
+                    );
+            } else {
+                (, amountIn, sqrtPriceX96Next) = MiladyPoolMath
+                    .getSwapAmountsFromAmount1(
+                        sqrtPriceCurrentX96,
+                        liquidity,
+                        amountOut
+                    );
+            }
         } else {
-            // token1 to token0
-            amountOut = FullMath.mulDiv(amountIn, FixedPoint96.Q96, priceX96);
+            amountIn = uint256(-amountSpecified);
+            if (zeroForOne) {
+                (, amountOut, sqrtPriceX96Next) = MiladyPoolMath
+                    .getSwapAmountsFromAmount0(
+                        sqrtPriceCurrentX96,
+                        liquidity,
+                        amountIn
+                    );
+            } else {
+                (amountOut, , sqrtPriceX96Next) = MiladyPoolMath
+                    .getSwapAmountsFromAmount1(
+                        sqrtPriceCurrentX96,
+                        liquidity,
+                        amountIn
+                    );
+            }
         }
 
-        // Apply the fee
-        uint256 feeAmount = FullMath.mulDiv(amountOut, fee, 1e6);
-        amountOut -= feeAmount;
+        beforeSwapDelta = toBeforeSwapDelta(
+            int128(uint128(amountIn)), // specified == token0/token1
+            -int128(uint128(amountOut)) // unspecified == token1/token0
+        );
     }
 
-    function _calculateAmountIn(
-        uint256 amountOut,
-        uint160 sqrtPriceLimitX96,
-        int24 tickSpacing,
-        address tokenIn,
-        address tokenOut,
-        uint24 fee
-    ) internal pure returns (uint256 amountIn) {
-        uint256 priceX96 = FullMath.mulDiv(
-            sqrtPriceLimitX96,
-            sqrtPriceLimitX96,
-            FixedPoint96.Q96
-        );
+    function _settle(Currency currency, uint128 amount) internal {
+        // Should be used to move the tokens received via permit2 to the pool manager
+        poolManager.sync(currency);
+        currency.transfer(address(poolManager), amount);
+        poolManager.settle();
+    }
 
-        // Calculate the amount in before fees
-        if (tokenIn < tokenOut) {
-            // token0 to token1
-            amountIn = FullMath.mulDiv(amountOut, FixedPoint96.Q96, priceX96);
-        } else {
-            // token1 to token0
-            amountIn = FullMath.mulDiv(amountOut, priceX96, FixedPoint96.Q96);
-        }
-
-        // Apply the fee
-        uint256 feeAmount = FullMath.mulDiv(amountIn, fee, 1e6);
-        amountIn += feeAmount;
+    function _take(Currency currency, uint128 amount) internal {
+        // Should be used to move the tokens received via permit2 to the pool manager
+        poolManager.sync(currency);
+        currency.transfer(address(this), amount);
     }
 }

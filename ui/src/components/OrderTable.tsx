@@ -44,13 +44,19 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 					</Tr>
 				</thead>
 				<tbody>
-					{currentOrders.map((order, index) => (
-						<Tr key={sampleOrders[index].hash}>
-							<Td>{shortenHash(sampleOrders[index].hash)}</Td>
-							<Td>{order.startTime}</Td>
-							<Td>{sampleOrders[index].completed ? '✔️' : ''}</Td>
-						</Tr>
-					))}
+					{currentOrders.map((order, index) => {
+						console.log({
+							order,
+							index,
+						})
+						return (
+							<Tr key={order.hash}>
+								<Td>{shortenHash(order.hash)}</Td>
+								<Td>{order.startTime}</Td>
+								<Td>{order.completed ? '✔️' : ''}</Td>
+							</Tr>
+						)
+					})}
 				</tbody>
 			</Table>
 			<Pagination>

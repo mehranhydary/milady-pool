@@ -18,4 +18,5 @@ export interface Order {
 	permit2Signature: string
 	permit2Nonce: string
 	permit2Deadline: string
+	orderSignature: string
 }
