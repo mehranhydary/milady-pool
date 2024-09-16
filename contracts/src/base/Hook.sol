@@ -221,10 +221,11 @@ abstract contract Hook is BaseHook, WyvernInspired {
             }
         }
 
-        beforeSwapDelta = toBeforeSwapDelta(
-            int128(uint128(amountIn)), // specified == token0/token1
-            -int128(uint128(amountOut)) // unspecified == token1/token0
-        );
+        // beforeSwapDelta = toBeforeSwapDelta(
+        //     int128(uint128(amountIn)), // specified == token0/token1
+        //     -int128(uint128(amountOut)) // unspecified == token1/token0
+        // );
+        beforeSwapDelta = toBeforeSwapDelta(0, 0);
     }
 
     function _settle(Currency currency, uint128 amount) internal {
