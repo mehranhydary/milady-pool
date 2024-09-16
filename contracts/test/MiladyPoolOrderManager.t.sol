@@ -65,10 +65,19 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
 
         POOL_MANAGER = manager;
 
-        _setUpMiladyPool();
-
         // Mock Tokens Setup
         (token0, token1) = deployMintAndApprove2Currencies();
+
+        _setUpMiladyPool();
+
+        (key, ) = initPool(
+            token0,
+            token1,
+            hooksUseable,
+            3000,
+            SQRT_PRICE_1_1,
+            ZERO_BYTES
+        );
 
         IERC20Minimal(Currency.unwrap(key.currency0)).approve(
             address(hooksUseable),
@@ -78,15 +87,6 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         IERC20Minimal(Currency.unwrap(key.currency1)).approve(
             address(hooksUseable),
             1000 ether
-        );
-
-        (key, ) = initPool(
-            token0,
-            token1,
-            hooksUseable,
-            3000,
-            SQRT_PRICE_1_1,
-            ZERO_BYTES
         );
 
         modifyLiquidityRouter.modifyLiquidity(
