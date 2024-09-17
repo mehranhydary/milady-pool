@@ -82,7 +82,7 @@ forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --p
 
 After step 6 from the list above, you can run `forge test --via-ir --rpc-url http://localhost:8545` to run simple tests
 
-FYI:
+<!-- FYI -->
 
 <!-- zero for one true, amount specified > 0, exact input of token 0 for token 1 -->
 <!-- zero for one true, amount specified < 0, exact output of token 0 for token 1 -->
