@@ -13,7 +13,7 @@ import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
 import {TransientStateLibrary} from "v4-core/libraries/TransientStateLibrary.sol";
 import {CurrencyLibrary, Currency} from "v4-core/types/Currency.sol";
-import {CurrencySettler} from "@uniswap/v4-core/test/utils/CurrencySettler.sol";
+import {CurrencySettler} from "./libraries/CurrencySettler.sol";
 
 import {MiladyPoolMath} from "./libraries/MiladyPoolMath.sol";
 import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
@@ -115,19 +115,12 @@ contract MiladyPoolRouter is WyvernInspired {
 
         uint128 liquidity = manager.getLiquidity(data.key.toId());
 
-        (
-            // TODO: Figure out if this is the beforeSwapDelta we pass back
-            // or if it is fine because we are conducting the swap here
-            BeforeSwapDelta beforeSwapDelta,
-            uint256 amountOut,
-            uint256 amountIn,
-
-        ) = _getSwapDeltas(
-                sqrtPriceX96,
-                liquidity,
-                data.params.amountSpecified,
-                data.params.zeroForOne
-            );
+        (, , uint256 amountIn, ) = _getSwapDeltas(
+            sqrtPriceX96,
+            liquidity,
+            data.params.amountSpecified,
+            data.params.zeroForOne
+        );
 
         ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer
             .PermitTransferFrom({
@@ -146,7 +139,6 @@ contract MiladyPoolRouter is WyvernInspired {
             memory transferDetails = ISignatureTransfer
                 .SignatureTransferDetails({
                     to: address(this),
-                    // requestedAmount: 100 * 10 ** 18
                     requestedAmount: amountIn
                 });
 
@@ -157,47 +149,27 @@ contract MiladyPoolRouter is WyvernInspired {
             permit2Signature
         );
 
-        console.log("amountIn: %d", amountIn);
-        console.log("amountOut: %d", amountOut);
-        console.log("zeroForOne: %s", data.params.zeroForOne);
-
         // Call this with new data params
         BalanceDelta delta = manager.swap(data.key, data.params, "");
         int256 deltaAfter0 = delta.amount0();
         int256 deltaAfter1 = delta.amount1();
-        // _settle(
-        //     data.params.zeroForOne // Gets the token that is swapped in
-        //         ? Currency(data.key.currency0)
-        //         : Currency(data.key.currency1),
-        //     uint128(delta.amount0())
-        // );
 
-        // // Can skip the entire amount to swap here if we just do the swap here
-        // // At this point the first token is already in the pool so we need to call _take
-        // _take(
-        //     data.params.zeroForOne // Gets the token that is swapped out
-        //         ? Currency(data.key.currency1)
-        //         : Currency(data.key.currency0),
-        //     uint128(delta.amount1()),
-        //     walletAddress
-        // );
-
-        // if (deltaAfter0 < 0) {
-        //     data.key.currency0.settle(
-        //         manager,
-        //         walletAddress,
-        //         uint256(-deltaAfter0),
-        //         true
-        //     );
-        // }
-        // if (deltaAfter1 < 0) {
-        //     data.key.currency1.settle(
-        //         manager,
-        //         walletAddress,
-        //         uint256(-deltaAfter1),
-        //         true
-        //     );
-        // }
+        if (deltaAfter0 < 0) {
+            data.key.currency0.settle(
+                manager,
+                walletAddress,
+                uint256(-deltaAfter0),
+                false
+            );
+        }
+        if (deltaAfter1 < 0) {
+            data.key.currency1.settle(
+                manager,
+                walletAddress,
+                uint256(-deltaAfter1),
+                false
+            );
+        }
         if (deltaAfter0 > 0) {
             data.key.currency0.take(
                 manager,
@@ -215,9 +187,7 @@ contract MiladyPoolRouter is WyvernInspired {
             );
         }
 
-        return abi.encode(delta);
-
-        // return abi.encode(toBeforeSwapDelta(0, 0));
+        return abi.encode(toBeforeSwapDelta(0, 0));
     }
 
     // TODO: Update so that the PoolKey sqrtPriceCurrentX96, liquidity are what you need
@@ -276,11 +246,9 @@ contract MiladyPoolRouter is WyvernInspired {
             }
         }
 
-        // // Since we are handling the swap in our hook instead of going through the hook's native swap feature
-        // // we inverted the swap delta (should be positive, negative otherwise)
         beforeSwapDelta = toBeforeSwapDelta(
-            -int128(uint128(amountIn)), // specified == token0/token1
-            int128(uint128(amountOut)) // unspecified == token1/token0
+            int128(uint128(amountIn)), // specified == token0/token1
+            -int128(uint128(amountOut)) // unspecified == token1/token0
         );
     }
 

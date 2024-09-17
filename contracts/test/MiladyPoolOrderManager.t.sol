@@ -37,13 +37,11 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
 
-    ISignatureTransfer PERMIT2;
+    ISignatureTransfer public constant PERMIT2 =
+        ISignatureTransfer(0x000000000022D473030F116dDEE9F6B43aC78BA3);
 
     Currency token0;
     Currency token1;
-
-    address constant CREATE2_DEPLOYER =
-        address(0x4e59b44847b379578588920cA78FbF26c0B4956C);
 
     bytes32 public constant TOKEN_PERMISSIONS_TYPEHASH =
         keccak256("TokenPermissions(address token,uint256 amount)");
@@ -54,10 +52,6 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         );
 
     function setUp() public {
-        PERMIT2 = ISignatureTransfer(
-            0x000000000022D473030F116dDEE9F6B43aC78BA3
-        );
-
         // Uniswap V4 Setup
         deployFreshManagerAndRouters();
 
@@ -120,6 +114,7 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         );
     }
 
+    // Exact input of token 0 for token 1 (zeroForOne, amountSpecfied > 0)
     function test__useOffchainOrderDetailsToSwap() public {
         address trader = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         uint256 totalAmount = type(uint256).max;
@@ -208,7 +203,133 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
         });
 
+        // Assuming the initial balances were set and stored in variables `initialToken0Balance` and `initialToken1Balance`
+        uint256 initialToken0Balance = IERC20Minimal(Currency.unwrap(token0))
+            .balanceOf(trader);
+        uint256 initialToken1Balance = IERC20Minimal(Currency.unwrap(token1))
+            .balanceOf(trader);
+
         _swapRouter.swap(key, swapParams, swapData);
+
+        // Assert the token balances after the swap
+        uint256 token0BalanceAfter = IERC20Minimal(Currency.unwrap(token0))
+            .balanceOf(trader);
+        uint256 token1BalanceAfter = IERC20Minimal(Currency.unwrap(token1))
+            .balanceOf(trader);
+
+        // Assuming the initial balances were set and stored in variables `initialToken0Balance` and `initialToken1Balance`
+        assert(token0BalanceAfter < initialToken0Balance);
+        assert(token1BalanceAfter > initialToken1Balance);
+        vm.stopPrank();
+    }
+
+    // Exact input of token 1 for token 1 (!zeroForOne, amountSpecfied > 0)
+    function test__useOffchainOrderDetailsToSwapOneForZero() public {
+        address trader = address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        uint256 totalAmount = type(uint256).max;
+
+        // Move some tokens into trader wallet
+        deal(Currency.unwrap(token0), trader, 1000 * 10 ** 18);
+        deal(Currency.unwrap(token1), trader, 1000 * 10 ** 18);
+
+        vm.startPrank(trader);
+        // Approve tokens for PERMIT2
+        IERC20Minimal(Currency.unwrap(token0)).approve(
+            address(PERMIT2),
+            totalAmount
+        );
+
+        IERC20Minimal(Currency.unwrap(token1)).approve(
+            address(PERMIT2),
+            totalAmount
+        );
+
+        // Swap amount: 100 * 10e18 tokens
+        uint256 swapAmount = 100 * 10 ** 18;
+
+        MiladyPoolRouter _swapRouter = new MiladyPoolRouter(manager);
+
+        ISignatureTransfer.TokenPermissions
+            memory permittedToken1 = _getTokenPermissions(
+                Currency.unwrap(token1),
+                swapAmount
+            );
+
+        ISignatureTransfer.PermitTransferFrom
+            memory permit = _getPermitTransferFrom(
+                permittedToken1,
+                1,
+                block.timestamp + 1 days
+            );
+
+        bytes32 msgHash = _getPermitTransferMsgHash(
+            permit,
+            PERMIT2.DOMAIN_SEPARATOR(),
+            address(_swapRouter)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            // Need to pass in a pk (generic one from Anvil / Foundry)
+            0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
+            msgHash
+        );
+
+        bytes memory permit2Sig = bytes.concat(r, s, bytes1(v));
+
+        PublicValuesStruct memory order = PublicValuesStruct({
+            walletAddress: trader,
+            permit2Signature: permit2Sig,
+            permit2Nonce: 1,
+            permit2Deadline: block.timestamp + 1 days
+        });
+
+        bytes32 hashToSign = _swapRouter.hashToSign(order);
+        (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
+            0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
+            hashToSign
+        );
+
+        bytes memory encodedPublicValues = abi.encode(order);
+        bytes memory encodedSignature = abi.encode(v_, r_, s_);
+        bytes memory swapData = abi.encode(
+            encodedPublicValues,
+            encodedSignature
+        );
+
+        PoolKey memory poolKey = PoolKey(
+            token0,
+            token1,
+            3000,
+            int24((3000 / 100) * 2),
+            hooksUseable
+        );
+
+        // Supporting exact input, zero for one
+        IPoolManager.SwapParams memory swapParams = IPoolManager.SwapParams({
+            zeroForOne: Currency.unwrap(token0) > Currency.unwrap(token1)
+                ? true
+                : false,
+            amountSpecified: -100 * 10 ** 18,
+            sqrtPriceLimitX96: TickMath.MAX_SQRT_PRICE - 1
+        });
+
+        // Assuming the initial balances were set and stored in variables `initialToken0Balance` and `initialToken1Balance`
+        uint256 initialToken0Balance = IERC20Minimal(Currency.unwrap(token0))
+            .balanceOf(trader);
+        uint256 initialToken1Balance = IERC20Minimal(Currency.unwrap(token1))
+            .balanceOf(trader);
+
+        _swapRouter.swap(key, swapParams, swapData);
+
+        // Assert the token balances after the swap
+        uint256 token0BalanceAfter = IERC20Minimal(Currency.unwrap(token0))
+            .balanceOf(trader);
+        uint256 token1BalanceAfter = IERC20Minimal(Currency.unwrap(token1))
+            .balanceOf(trader);
+
+        // Assuming the initial balances were set and stored in variables `initialToken0Balance` and `initialToken1Balance`
+        assert(token0BalanceAfter > initialToken0Balance);
+        assert(token1BalanceAfter < initialToken1Balance);
+        vm.stopPrank();
     }
 
     function _getTokenPermissions(
