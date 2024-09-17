@@ -8,7 +8,8 @@ This app has 4 parts.
 
 1. UI
 2. AVS
-3. Contracts
+3. Hook Contracts
+4. Swap Router Contracts
 
 ### User Interface
 
@@ -44,19 +45,7 @@ forge script script/deploy/local/Deploy_From_Scratch.s.sol --rpc-url http://loca
 --sig "run(string memory configFile)" -- local/deploy_from_scratch.anvil.config.json
 ```
 
-6. In another terminal deploy Milady Pool contracts
-
-```sh
-cd contracts
-
-forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --private-key \
-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
-```
-
-7. Next, start the operator. Run `cd operator` to change into the AVS server folder
-8. Run `yarn` to install all dependencies
-9. Run `cp .env.example .env` and update your `.env` accordingly
-10. You should also deploy permit2. It will deploy at `0x000000000022D473030F116dDEE9F6B43aC78BA3`.
+6. You should also deploy permit2. It will deploy at `0x000000000022D473030F116dDEE9F6B43aC78BA3`.
 
 ```sh
 cd contracts/lib/v4-periphery/lib/permit2
@@ -65,7 +54,7 @@ forge script script/DeployPermit2.s.sol --rpc-url http://localhost:8545 --privat
 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
 ```
 
-11. You should also deploy the other Uniswap contracts
+7. You should also deploy the other Uniswap contracts
 
 ```sh
 cd contracts
@@ -74,9 +63,24 @@ forge script script/V4Deployer.s.sol --rpc-url http://localhost:8545 --private-k
 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
 ```
 
+8. In another terminal deploy Milady Pool contracts
+
+```sh
+cd contracts
+
+forge script script/MiladyPoolDeployer.s.sol --rpc-url http://localhost:8545 --private-key \
+0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
 ```
 
-```
+9. Next, start the operator. Run `cd operator` to change into the AVS server folder
+10. Run `yarn` to install all dependencies
+11. Run `yarn dev` to start up a GraphQL API, a connection to your database, and an event listener for your contracts
+12. For your UI, cd into the `ui` folder
+13. Run `yarn && yarn dev`
+
+## Testing
+
+After step 6 from the list above, you can run `forge test --via-ir --rpc-url http://localhost:8545` to run simple tests
 
 FYI:
 
