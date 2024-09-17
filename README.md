@@ -2,16 +2,52 @@
 
 Milady Pool is a dark pool, a private platform where users trade crypto without disclosing intentions to a wider market.
 
+![Milady Pool Banner](banner.png)
+
+## Key Links
+
+-   [Deck](https://docs.google.com/presentation/d/1VKNYl90o_lazJH31P9Q9OY78FQ-3M4cKGnbh8PQDtO8/edit?usp=sharing)
+
+## Background
+
+Milady Pool is a dark pool implementation that leverages what I learned in the Uniswap Hook Incubator and new and old tech like Eigenlayer, Succinct SP1, and Wyvern (OpenSea). My goal was to create smart contract interactions where I could minimize the technical nuances and complexity for the end-user. I used variations of signed messages, hashes, proofs to streamline how people can trade on chain without compromising their privacy.
+
+## Impact
+
+I created a swap router that can interact with v4 without needing the user to transfer tokens into the pool manager before placing their order. The user stores a signed message with an Eigenlayer AVS. The signed message has a permit2 object. When a price is hit onchain, the signed message is sent onchain by an AVS operator. The smart contracts I created can parse the order and the permit2 object to facilitate the swap. Tokens are only transferred from a user's wallet when their order is valid onchain.
+
+## Challenges
+
+1. I wanted to use no-op hooks to obscure the transactions even more. It was quite tricky balancing the token inputs and outputs because I was using permit2 instead of the normal transfer mechanisms in v4. I ended up doing all of the settlement of tokens through a custom router contract instead.
+
+2. I created a simple offchain Succinct SP1 circuit (to create proofs for the orders created in the app) and a Rust server API to interact with the circuit. To add the corresponding Solidity code to verify the orders / proofs / etc. would've taken me a lot longer so I deferred it for now.
+
+## Extensions
+
+#### Hook / Router
+
+-   Better handling of swap details (for permit2, zk proofs)
+-   Add fees (take part of the output and swap into ETH)
+-   Obscure the swap capabilities through zk proofs (with SP1 and Succinct) (PoC started, ran out of time) and no-op hooks (moved everything into a custom router for now)
+-   Add support for EIP-1271 and other signatures
+
+#### Eigenlayer
+
+-   Confirm activity and dispute details for operators, aggregators, etc.
+-   Add fee sharing (through a new ERC-20 token that can be staked)
+-   Align to AVS node specs
+-   Write tests
+-   Add multi-chain / cross-chain compatibility
+
+#### Overall
+
+-   Audits, make UI flow better, distribute the database
+
 ## Archtecture
 
-This app has 4 parts.
-
-1. UI
-2. AVS
-3. Hook Contracts
-4. Swap Router Contracts
-
 ### User Interface
+
+![App Screenshot](app_screenshot.png)
 
 The user interface is stored in the `/ui` folder. It is a Next JS app. Milady Pool uses a single page app for users to create and view orders. As a user, you can connect your wallet and create private orders using the user interface.
 
@@ -25,7 +61,7 @@ Contracts called `MiladyPoolOrderManager` and `MiladyPoolRouter` were designed a
 
 ### ZKP
 
-TBD
+This project uses Succint's SP1 to create Zero Knowledge Proofs for the orders created. Integration is pending. A Rust API server and a ZKP circuit is available for use.
 
 ## Getting started
 

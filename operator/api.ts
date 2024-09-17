@@ -94,11 +94,16 @@ server.start().then(() => {
 })
 
 httpServer.listen(serverConfig.port, () => {
-	console.log(`Milady Pool AVS API running on port: ${serverConfig.port}\n`)
+	console.log(
+		`Milady Pool AVS GraphQL API running on port: ${serverConfig.port}\n`
+	)
 })
 
 monitorNewTicks()
 	.then(() => {
+		console.log(
+			"For new ticks, goes through all orders and checks if they're valid for the new price"
+		)
 		console.log(
 			'Monitoring new ticks on MiladyPool deployed at http://127.0.0.1:8545'
 		)
