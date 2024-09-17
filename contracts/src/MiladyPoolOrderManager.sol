@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
-import "forge-std/console.sol";
-import "forge-std/console2.sol";
-
 // Uniswap
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";

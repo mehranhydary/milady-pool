@@ -2,11 +2,6 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import "forge-std/Script.sol";
-import "forge-std/StdJson.sol";
-import "forge-std/console.sol";
-import "forge-std/console2.sol";
-import {Vm} from "forge-std/Vm.sol";
 
 // Uniswap V4 Core
 
