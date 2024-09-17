@@ -21,7 +21,7 @@ The actively validated service (AVS) is responsible for storing, processing, and
 
 ### Contracts
 
-A contract called `MiladyPoolTaskManager` was designed as a Uniswap V4 hook that can process limit orders from the Milady Pool AVS.
+Contracts called `MiladyPoolOrderManager` and `MiladyPoolRouter` were designed as a Uniswap V4 hook that can process limit orders from the Milady Pool AVS.
 
 ### ZKP
 
