@@ -1,0 +1,36 @@
+Arguments: 
+  /Users/mehrancastle/.nvm/versions/node/v18.18.2/bin/node /Users/mehrancastle/.yarn/bin/yarn.js add permit2-sdk
+
+PATH: 
+  /Users/mehrancastle/.rvm/gems/ruby-2.7.4/bin:/Users/mehrancastle/.rvm/gems/ruby-2.7.4@global/bin:/Users/mehrancastle/.rvm/rubies/ruby-2.7.4/bin:/Applications/Cursor.app/Contents/MacOS:/Users/mehrancastle/.bun/bin:/Applications/Postgres.app/Contents/Versions/latest/bin:/Users/mehrancastle/.yarn/bin:/Users/mehrancastle/.config/yarn/global/node_modules/.bin:/Users/mehrancastle/.nvm/versions/node/v18.18.2/bin:/Users/mehrancastle/Library/pnpm:/Users/mehrancastle/.local/share/solana/install/active_release/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Users/mehrancastle/Library/Android/sdk/platform-tools:/Users/mehrancastle/.rvm/gems/ruby-2.7.4/bin:/Users/mehrancastle/.rvm/gems/ruby-2.7.4@global/bin:/Users/mehrancastle/.rvm/rubies/ruby-2.7.4/bin:/Applications/Cursor.app/Contents/MacOS:/Users/mehrancastle/.bun/bin:/Applications/Postgres.app/Contents/Versions/latest/bin:/Users/mehrancastle/.yarn/bin:/Users/mehrancastle/.config/yarn/global/node_modules/.bin:/Users/mehrancastle/.nvm/versions/node/v18.18.2/bin:/Users/mehrancastle/Library/pnpm:/Users/mehrancastle/.local/share/solana/install/active_release/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/mehrancastle/.cargo/bin:/Users/mehrancastle/.sp1/bin:/Users/mehrancastle/.foundry/bin:/Users/mehrancastle/.rvm/bin:/Users/mehrancastle/.foundry/bin:/Users/mehrancastle/.rvm/bin
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  18.18.2
+
+Platform: 
+  darwin arm64
+
+Trace: 
+  Error: https://registry.npmjs.org/permit2-sdk: Not found
+      at params.callback [as _callback] (/Users/mehrancastle/.yarn/lib/cli.js:66145:18)
+      at self.callback (/Users/mehrancastle/.yarn/lib/cli.js:140890:22)
+      at Request.emit (node:events:517:28)
+      at Request.<anonymous> (/Users/mehrancastle/.yarn/lib/cli.js:141862:10)
+      at Request.emit (node:events:517:28)
+      at IncomingMessage.<anonymous> (/Users/mehrancastle/.yarn/lib/cli.js:141784:12)
+      at Object.onceWrapper (node:events:631:28)
+      at IncomingMessage.emit (node:events:529:35)
+      at endReadableNT (node:internal/streams/readable:1368:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+
+npm manifest: 
+  No manifest
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

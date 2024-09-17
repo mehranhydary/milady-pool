@@ -12,6 +12,7 @@ import { delegationManagerAbi } from './abis/delegationManagerAbi'
 import { stakeRegistryAbi } from './abis/stakeRegistryAbi'
 import { avsDirectoryAbi } from './abis/avsDirectoryAbi'
 import { miladyPoolOrderManagerAbi } from './abis/miladyPoolOrderManagerAbi'
+import { miladyPoolRouterAbi } from './abis/miladyPoolRouterAbi'
 import { getDb } from '../db/getDb'
 import { Order, PoolKey } from '@prisma/client'
 
@@ -28,6 +29,7 @@ const miladyPoolOrderManagerContractAddress =
 	process.env.MILADY_POOL_CONTRACT_ADDRESS!
 const stakeRegistryAddress = process.env.STAKE_REGISTRY_ADDRESS!
 const avsDirectoryAddress = process.env.AVS_DIRECTORY_ADDRESS!
+const miladyPoolRouterAddress = process.env.MILADY_POOL_ROUTER_CONTRACT_ADDRESS!
 
 const delegationManagerContract = new Contract(
 	delegationManagerAddress,
@@ -49,6 +51,11 @@ const avsDirectoryContract = new Contract(
 	avsDirectoryAbi,
 	wallet
 )
+const miladyPoolRouterContract = new Contract(
+	miladyPoolRouterAddress,
+	miladyPoolRouterAbi,
+	wallet
+)
 
 const submitValidOrder = async (order: OrderWithPoolKey) => {
 	const abiEncoder = AbiCoder.defaultAbiCoder()
@@ -63,10 +70,9 @@ const submitValidOrder = async (order: OrderWithPoolKey) => {
 	)
 	const encodedData = abiEncoder.encode(
 		['bytes', 'bytes'],
-		// TODO: Add signature
 		[orderEncoded, order.orderSignature]
 	)
-	const tx = await miladyPoolContract.swap(
+	const tx = await miladyPoolRouterContract.swap(
 		{
 			currency0: order.poolKey.token0,
 			currency1: order.poolKey.token1,
@@ -77,7 +83,9 @@ const submitValidOrder = async (order: OrderWithPoolKey) => {
 		{
 			zeroForOne: order.zeroForOne,
 			amountSpecified: order.amountSpecified,
-			sqrtPriceLimitX96: order.tickToSellAt, // TODO: Calculate this value from Tick
+			sqrtPriceLimitX96: order.zeroForOne
+				? '4295128740' // Already added one
+				: '1461446703485210103287273052203988822378723970341', // Already removed one
 		},
 		encodedData // Has encoded order and signature
 	)

@@ -27,7 +27,8 @@ contract MiladyPoolRouter is WyvernInspired {
     using CurrencySettler for Currency;
 
     // TODO: Hardcoded for now, should update so that we pass it in
-    address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+    address public constant PERMIT2 =
+        0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
     struct CallbackData {
         address sender;

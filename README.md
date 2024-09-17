@@ -65,6 +65,15 @@ forge script script/DeployPermit2.s.sol --rpc-url http://localhost:8545 --privat
 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
 ```
 
+11. You should also deploy the other Uniswap contracts
+
+```sh
+cd contracts
+
+forge script script/V4Deployer.s.sol --rpc-url http://localhost:8545 --private-key \
+0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --broadcast -v --via-ir
+```
+
 ```
 
 ```
