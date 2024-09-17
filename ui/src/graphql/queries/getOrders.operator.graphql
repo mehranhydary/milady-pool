@@ -15,5 +15,6 @@ query GetOrders {
 		permit2Signature
 		startTime
 		deadline
+		orderSignature
 	}
 }

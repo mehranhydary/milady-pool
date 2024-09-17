@@ -13,5 +13,7 @@ mutation CreateOrder($input: CreateOrderInput!) {
 		}
 		startTime
 		deadline
+		permit2Signature
+		orderSignature
 	}
 }

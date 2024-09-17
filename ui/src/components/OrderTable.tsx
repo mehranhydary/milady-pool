@@ -47,10 +47,13 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 							index,
 						})
 						return (
-							<Tr key={order.hash}>
-								<Td>{order.hash && shortenHash(order.hash)}</Td>
+							<Tr key={order.orderSignature}>
+								<Td>
+									{order.orderSignature &&
+										shortenHash(order.orderSignature)}
+								</Td>
 								<Td>{order.startTime}</Td>
-								<Td>{order.completed ? '✔️' : ''}</Td>
+								<Td>{order.completed ? '✔️' : 'x'}</Td>
 							</Tr>
 						)
 					})}

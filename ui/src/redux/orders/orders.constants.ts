@@ -14,5 +14,6 @@ export const initialState = {
 		tickSpacing: 0,
 		hooks: '',
 		permit2Signature: '',
+		orderSignature: '',
 	},
 }

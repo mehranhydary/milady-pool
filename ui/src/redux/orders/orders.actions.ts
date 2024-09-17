@@ -28,6 +28,7 @@ export const fetchOrdersAction = createAsyncThunk(
 						permit2Signature
 						startTime
 						deadline
+						orderSignature
 					}
 				}
 			`,
@@ -59,6 +60,8 @@ export const createOrderAction = createAsyncThunk(
 						}
 						startTime
 						deadline
+						permit2Signature
+						orderSignature
 					}
 				}
 			`,

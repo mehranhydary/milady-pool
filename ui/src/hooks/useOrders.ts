@@ -19,8 +19,6 @@ export const useOrders = () => {
 	const dispatch = useDispatch()
 	const { address } = useAccount()
 	const orders = useSelector(selectOrders)
-	const [permit2Nonce, setPermit2Nonce] = useState<number | null>(null)
-	const [permit2Deadline, setPermit2Deadline] = useState<number | null>(null)
 
 	const { signMessageAsync } = useSignMessage()
 
@@ -42,12 +40,6 @@ export const useOrders = () => {
 			zeroAddress,
 			parseEther('232', 'wei').toString()
 		)
-		console.log('Permit2 message hash created:', permit2Hash)
-		console.log('Permit2 nonce:', permit2Nonce)
-		console.log('Permit2 deadline:', permit2Deadline)
-
-		setPermit2Deadline(permit2Deadline)
-		setPermit2Nonce(permit2Nonce)
 
 		const data = await signMessageAsync({ message: permit2Hash })
 		console.log('Signed permit2 hash:', data)
@@ -83,13 +75,7 @@ export const useOrders = () => {
 			})
 		)
 		console.log('Order dispatched')
-	}, [
-		address,
-		setPermit2Nonce,
-		setPermit2Deadline,
-		signMessageAsync,
-		dispatch,
-	])
+	}, [address, signMessageAsync, dispatch])
 
 	return { orders, createOrder }
 }
