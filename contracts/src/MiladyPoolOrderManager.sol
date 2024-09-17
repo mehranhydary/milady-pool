@@ -11,6 +11,7 @@ import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
 import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {StateLibrary} from "v4-core/libraries/StateLibrary.sol";
+import {CurrencyLibrary, Currency} from "v4-core/types/Currency.sol";
 // Eigenlayer
 import "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin-upgrades/contracts/access/OwnableUpgradeable.sol";
@@ -42,6 +43,7 @@ contract MiladyPoolOrderManager is
     using BN254 for BN254.G1Point;
     using PoolIdLibrary for PoolKey;
     using StateLibrary for IPoolManager;
+    using CurrencyLibrary for Currency;
 
     constructor(
         IRegistryCoordinator _registryCoordinator,
@@ -80,7 +82,7 @@ contract MiladyPoolOrderManager is
     function afterSwap(
         address,
         PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
+        IPoolManager.SwapParams calldata,
         BalanceDelta,
         bytes calldata
     ) external override onlyByPoolManager returns (bytes4, int128) {

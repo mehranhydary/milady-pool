@@ -199,9 +199,12 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             hooksUseable
         );
 
+        // Supporting exact input, zero for one
         IPoolManager.SwapParams memory swapParams = IPoolManager.SwapParams({
-            zeroForOne: true,
-            amountSpecified: 100 * 10 ** 18,
+            zeroForOne: Currency.unwrap(token0) < Currency.unwrap(token1)
+                ? true
+                : false,
+            amountSpecified: -100 * 10 ** 18,
             sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
         });
 
