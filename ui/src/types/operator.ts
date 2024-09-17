@@ -16,25 +16,34 @@ export interface Scalars {
 }
 
 export interface CreateOrderInput {
+  amountSpecified: Scalars['String']['input'];
   deadline?: InputMaybe<Scalars['ISO8601Date']['input']>;
   fee: Scalars['String']['input'];
   hooks?: InputMaybe<Scalars['String']['input']>;
-  inputAmount?: InputMaybe<Scalars['String']['input']>;
-  outputAmount?: InputMaybe<Scalars['String']['input']>;
+  orderSignature: Scalars['String']['input'];
+  permit2Deadline: Scalars['ISO8601Date']['input'];
+  permit2Nonce: Scalars['String']['input'];
   permit2Signature: Scalars['String']['input'];
   startTime?: InputMaybe<Scalars['ISO8601Date']['input']>;
-  tickSpacing: Scalars['Int']['input'];
-  tickToSellAt?: InputMaybe<Scalars['Int']['input']>;
+  tickSpacing: Scalars['String']['input'];
+  tickToSellAt?: InputMaybe<Scalars['String']['input']>;
   tokenA: Scalars['String']['input'];
   tokenB: Scalars['String']['input'];
-  tokenInput: Scalars['String']['input'];
   trader: Scalars['String']['input'];
+  zeroForOne: Scalars['Boolean']['input'];
 }
+
+export type CreateOrderVariables = Exact<{
+  input: CreateOrderInput;
+}>;
+
+
+export type CreateOrder = { createOrder: { trader: string, tickToSellAt: string, zeroForOne: boolean, amountSpecified: string, startTime: string, deadline: string, poolKey: { token0: string, token1: string, fee: string, tickSpacing: string, hooks: string } } };
 
 export type GetOrdersVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetOrders = { orders: Array<{ id: string, trader: string, tickToSellAt: number, zeroForOne: boolean, tokenInput: string, inputAmount?: string | undefined, outputAmount?: string | undefined, permit2Signature: string, startTime: string, deadline: string, poolKey: { token0: string, token1: string, fee: string, tickSpacing: number, hooks: string } }> };
+export type GetOrders = { orders: Array<{ id: string, trader: string, tickToSellAt: string, zeroForOne: boolean, amountSpecified: string, permit2Signature: string, startTime: string, deadline: string, poolKey: { token0: string, token1: string, fee: string, tickSpacing: string, hooks: string } }> };
 
 
       export interface PossibleTypesResultData {

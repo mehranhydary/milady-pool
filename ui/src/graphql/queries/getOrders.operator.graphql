@@ -4,9 +4,7 @@ query GetOrders {
 		trader
 		tickToSellAt
 		zeroForOne
-		tokenInput
-		inputAmount
-		outputAmount
+		amountSpecified
 		poolKey {
 			token0
 			token1

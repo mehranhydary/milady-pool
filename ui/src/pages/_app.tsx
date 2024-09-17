@@ -12,26 +12,24 @@ const queryClient = new QueryClient()
 
 export default function App({ Component, pageProps }: AppProps) {
 	return (
-		<>
-			<WagmiProvider config={config}>
-				<QueryClientProvider client={queryClient}>
-					<ReduxProvider store={getReusableStore().store}>
-						<Component {...pageProps} />
-						<ToastContainer
-							position='bottom-center'
-							autoClose={5000}
-							hideProgressBar={false}
-							newestOnTop={false}
-							closeOnClick
-							rtl={false}
-							pauseOnFocusLoss
-							draggable
-							pauseOnHover
-							theme='dark'
-						/>
-					</ReduxProvider>
-				</QueryClientProvider>
-			</WagmiProvider>
-		</>
+		<WagmiProvider config={config}>
+			<QueryClientProvider client={queryClient}>
+				<ReduxProvider store={getReusableStore().store}>
+					<Component {...pageProps} />
+					<ToastContainer
+						position='bottom-center'
+						autoClose={5000}
+						hideProgressBar={false}
+						newestOnTop={false}
+						closeOnClick
+						rtl={false}
+						pauseOnFocusLoss
+						draggable
+						pauseOnHover
+						theme='dark'
+					/>
+				</ReduxProvider>
+			</QueryClientProvider>
+		</WagmiProvider>
 	)
 }

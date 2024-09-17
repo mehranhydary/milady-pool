@@ -95,7 +95,7 @@ const submitValidOrder = async (order: OrderWithPoolKey) => {
 }
 
 export const monitorNewTicks = async () => {
-	miladyPoolContract.on('TickUpdated', async (tick: number) => {
+	miladyPoolContract.on('PriceUpdated', async (tick: number) => {
 		console.log(
 			'Tick updated... check orders in the db to see if any qualify'
 		)

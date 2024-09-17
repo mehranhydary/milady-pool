@@ -17,9 +17,7 @@ export const fetchOrdersAction = createAsyncThunk(
 						trader
 						tickToSellAt
 						zeroForOne
-						tokenInput
-						inputAmount
-						outputAmount
+						amountSpecified
 						poolKey {
 							token0
 							token1
@@ -51,7 +49,7 @@ export const createOrderAction = createAsyncThunk(
 						trader
 						tickToSellAt
 						zeroForOne
-						inputAmount
+						amountSpecified
 						poolKey {
 							token0
 							token1
@@ -66,17 +64,20 @@ export const createOrderAction = createAsyncThunk(
 			`,
 			variables: {
 				input: {
-					trader: '0x071D9fe61cE306AEF04b7889780f889f444D7BF7',
-					tickToSellAt: 197949,
-					tokenInput: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-					inputAmount: null,
-					outputAmount: '1',
+					trader: variables.walletAddress,
+					tickToSellAt: '197949',
+					amountSpecified: '100000000000000000000', // 100 tokens
+					zeroForOne: true,
 					tokenA: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
 					tokenB: '0x0000000000000000000000000000000000000000',
-					fee: '500',
-					tickSpacing: 10,
-					hooks: '0x0000000000000000000000000000000000000000',
-					permit2Signature: '',
+					fee: '3000',
+					tickSpacing: '60',
+					// TODO: Need to fix  this later and to be dynamic
+					hooks: '0x537c407139353f5a6086a4b017fbdd8b179310c8',
+					permit2Signature: variables.permit2Signature,
+					permit2Deadline: variables.permit2Deadline,
+					permit2Nonce: variables.permit2Nonce,
+					orderSignature: variables.orderSignature,
 				},
 			},
 		})

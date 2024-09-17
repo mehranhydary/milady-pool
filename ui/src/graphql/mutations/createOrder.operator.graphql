@@ -3,7 +3,7 @@ mutation CreateOrder($input: CreateOrderInput!) {
 		trader
 		tickToSellAt
 		zeroForOne
-		inputAmount
+		amountSpecified
 		poolKey {
 			token0
 			token1

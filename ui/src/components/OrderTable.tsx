@@ -1,12 +1,9 @@
 import styled from 'styled-components'
 import { useState } from 'react'
-import { orders as sampleOrders } from '@/data/sample'
 
 const OrderTable = ({ orders }: { orders: any[] }) => {
-	// TODO: Have the orders... need to update and work with hashes as well (if we want)
-	console.log(orders.map((order) => order))
 	const [currentPage, setCurrentPage] = useState(1)
-	const ordersPerPage = 5
+	const ordersPerPage = orders.length > 10 ? 10 : orders.length
 
 	const indexOfLastOrder = currentPage * ordersPerPage
 	const indexOfFirstOrder = indexOfLastOrder - ordersPerPage
@@ -28,7 +25,7 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 	const totalPages = Math.ceil(orders.length / ordersPerPage)
 
 	return (
-		<>
+		<Container>
 			<HeaderContainer>
 				<Title>Milady Pool Orders</Title>
 				<Subtitle>
@@ -51,7 +48,7 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 						})
 						return (
 							<Tr key={order.hash}>
-								<Td>{shortenHash(order.hash)}</Td>
+								<Td>{order.hash && shortenHash(order.hash)}</Td>
 								<Td>{order.startTime}</Td>
 								<Td>{order.completed ? '✔️' : ''}</Td>
 							</Tr>
@@ -79,11 +76,18 @@ const OrderTable = ({ orders }: { orders: any[] }) => {
 					</PaginationButton>
 				)}
 			</Pagination>
-		</>
+		</Container>
 	)
 }
 
 export default OrderTable
+
+const Container = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	width: 480px;
+`
 
 const HeaderContainer = styled.div`
 	display: flex;

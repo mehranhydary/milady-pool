@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { useState } from 'react'
-import { toast } from 'react-toastify'
+
 import styled from 'styled-components'
 
 const Actions = ({ createOrder }: { createOrder: () => Promise<void> }) => {
@@ -12,7 +12,6 @@ const Actions = ({ createOrder }: { createOrder: () => Promise<void> }) => {
 
 	const onCreateOrderClick = async () => {
 		await createOrder()
-		toast.success('Order created')
 	}
 
 	return (

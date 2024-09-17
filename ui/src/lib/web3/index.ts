@@ -2,8 +2,6 @@ import {
 	createPublicClient,
 	http,
 	encodeFunctionData,
-	keccak256,
-	encodePacked,
 	encodeAbiParameters,
 } from 'viem'
 import {
@@ -13,7 +11,7 @@ import {
 	PermitTransferFrom,
 } from '@uniswap/Permit2-sdk'
 import { localhost } from 'viem/chains'
-import { permit2Abi, erc20Abi, miladyPoolRouterAbi } from './abis'
+import { erc20Abi, miladyPoolRouterAbi } from './abis'
 
 const client = createPublicClient({
 	chain: localhost,
@@ -61,7 +59,7 @@ export const createPermit2MessageHash = async (
 		client.chain.id
 	)
 
-	return hash
+	return { hash, nonce, deadline }
 }
 
 export const createOrderAndHashToSign = async (
@@ -77,6 +75,8 @@ export const createOrderAndHashToSign = async (
 		permit2Signature: permit2Sig,
 	}
 
+	console.log({ order })
+
 	const hashToSign = await client.readContract({
 		address: '0xc3e53f4d16ae77db1c982e75a937b9f60fe63690',
 		abi: miladyPoolRouterAbi,
@@ -84,9 +84,9 @@ export const createOrderAndHashToSign = async (
 		args: [
 			[
 				order.walletAddress,
+				order.permit2Signature,
 				order.permit2Nonce,
 				order.permit2Deadline,
-				order.permit2Signature,
 			],
 		],
 	})
