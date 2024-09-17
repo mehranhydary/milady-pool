@@ -203,10 +203,6 @@ contract MiladyPoolRouter is WyvernInspired {
             uint160 sqrtPriceX96Next
         )
     {
-        console.log("sqrtPriceCurrentX96: %d", sqrtPriceCurrentX96);
-        console.log("liquidity: %d", liquidity);
-        console.log("amountSpecified: %d", amountSpecified);
-        console.log("zeroForOne: %s", zeroForOne);
         if (amountSpecified > 0) {
             amountOut = uint256(amountSpecified);
             if (zeroForOne) {
