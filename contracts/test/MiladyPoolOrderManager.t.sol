@@ -17,7 +17,6 @@ import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 import {CurrencyLibrary, Currency} from "v4-core/types/Currency.sol";
-import {PoolSwapTest} from "v4-core/test/PoolSwapTest.sol";
 import {Deployers} from "@uniswap/v4-core/test/utils/Deployers.sol";
 import {IERC20Minimal} from "v4-core/interfaces/external/IERC20Minimal.sol";
 
@@ -30,6 +29,7 @@ import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.s
 import {MiladyPoolOrderManager} from "../src/MiladyPoolOrderManager.sol";
 import {PublicValuesStruct} from "../src/base/Structs.sol";
 import {IMiladyPoolOrderManager} from "../src/interfaces/IMiladyPoolOrderManager.sol";
+import {MiladyPoolRouter} from "../src/MiladyPoolRouter.sol";
 
 import {MiladyPoolDeployer} from "./utils/MiladyPoolDeployer.sol";
 
@@ -143,6 +143,8 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
         // Swap amount: 100 * 10e18 tokens
         uint256 swapAmount = 100 * 10 ** 18;
 
+        MiladyPoolRouter _swapRouter = new MiladyPoolRouter(manager);
+
         ISignatureTransfer.TokenPermissions
             memory permittedToken0 = _getTokenPermissions(
                 Currency.unwrap(token0),
@@ -158,7 +160,8 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
 
         bytes32 msgHash = _getPermitTransferMsgHash(
             permit,
-            PERMIT2.DOMAIN_SEPARATOR()
+            PERMIT2.DOMAIN_SEPARATOR(),
+            address(_swapRouter)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             // Need to pass in a pk (generic one from Anvil / Foundry)
@@ -175,7 +178,7 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             permit2Deadline: block.timestamp + 1 days
         });
 
-        bytes32 hashToSign = miladyPoolOrderManager.hashToSign(order);
+        bytes32 hashToSign = _swapRouter.hashToSign(order);
         (uint8 v_, bytes32 r_, bytes32 s_) = vm.sign(
             0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80,
             hashToSign
@@ -202,15 +205,7 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
             sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
         });
 
-        swapRouter.swap(
-            key,
-            swapParams,
-            PoolSwapTest.TestSettings({
-                takeClaims: false,
-                settleUsingBurn: false
-            }),
-            swapData
-        );
+        _swapRouter.swap(key, swapParams, swapData);
     }
 
     function _getTokenPermissions(
@@ -236,7 +231,8 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
 
     function _getPermitTransferMsgHash(
         ISignatureTransfer.PermitTransferFrom memory permit,
-        bytes32 domainSeparator
+        bytes32 domainSeparator,
+        address verifyingContract
     ) internal view returns (bytes32 msgHash) {
         bytes32 tokenPermissions = keccak256(
             abi.encode(TOKEN_PERMISSIONS_TYPEHASH, permit.permitted)
@@ -251,7 +247,7 @@ contract MiladyPoolOrderManagerTest is MiladyPoolDeployer, Deployers {
                         PERMIT_TRANSFER_FROM_TYPEHASH,
                         tokenPermissions,
                         // NOTE: should be the verifying contract (i.e. the spender)
-                        address(hooksUseable),
+                        verifyingContract,
                         permit.nonce,
                         permit.deadline
                     )

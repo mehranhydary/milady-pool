@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: VPL-1.0
 pragma solidity ^0.8.26;
 
+import "forge-std/console.sol";
+import "forge-std/console2.sol";
+
 // Uniswap
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
@@ -70,23 +73,14 @@ contract MiladyPoolOrderManager is
         IPoolManager.SwapParams calldata params,
         bytes calldata data
     ) external override returns (bytes4, BeforeSwapDelta, uint24) {
-        if (data.length == 0)
-            return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
-        (
-            bytes4 selector,
-            BeforeSwapDelta delta,
-            // TODO: Figure out what this is (not needed for now)
-            uint24 lpFeeOverride
-        ) = _beforeSwap(sender, key, params, data);
-        // TODO: Come back to this to emit an event
-        // emit OrderFulfilled(proofBytes);
-        return (selector, delta, lpFeeOverride);
+        // TODO: Come back to this
+        return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
     }
 
     function afterSwap(
         address,
         PoolKey calldata key,
-        IPoolManager.SwapParams calldata,
+        IPoolManager.SwapParams calldata params,
         BalanceDelta,
         bytes calldata
     ) external override onlyByPoolManager returns (bytes4, int128) {

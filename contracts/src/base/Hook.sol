@@ -15,25 +15,17 @@ import {BalanceDelta} from "v4-core/types/BalanceDelta.sol";
 import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/types/BeforeSwapDelta.sol";
 import {Currency, CurrencyLibrary} from "v4-core/types/Currency.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
-import {WyvernInspired} from "./WyvernInspired.sol";
 import {PublicValuesStruct, Sig} from "./Structs.sol";
 import {ISignatureTransfer} from "permit2/src/interfaces/ISignatureTransfer.sol";
-import {FixedPoint96} from "v4-core/libraries/FixedPoint96.sol";
-import {FullMath} from "v4-core/libraries/FullMath.sol";
 import {MiladyPoolMath} from "../libraries/MiladyPoolMath.sol";
 
-abstract contract Hook is BaseHook, WyvernInspired {
+abstract contract Hook is BaseHook {
     using StateLibrary for IPoolManager;
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
 
-    // TODO: Hardcoded for now, should update so that we pass it in
-    address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+    // TODO: Handle before swap balance delta and claims with 6909
 
-    // Handle before swap balance delta and claims with 6909
-
-    // Errors
-    error InvalidOrder();
     error NothingToClaim();
     error NotEnoughToClaim();
 
@@ -62,181 +54,5 @@ abstract contract Hook is BaseHook, WyvernInspired {
                 afterAddLiquidityReturnDelta: false,
                 afterRemoveLiquidityReturnDelta: false
             });
-    }
-
-    function _beforeSwap(
-        address,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        bytes calldata data
-    ) internal returns (bytes4, BeforeSwapDelta, uint24) {
-        (bytes memory publicValues, bytes memory sig) = abi.decode(
-            data,
-            (bytes, bytes)
-        );
-
-        PublicValuesStruct memory _publicValues = abi.decode(
-            publicValues,
-            (PublicValuesStruct)
-        );
-
-        Sig memory _sig = abi.decode(sig, (Sig));
-
-        bytes32 hash = _hashToSign(_publicValues);
-
-        if (!_validateOrder(hash, _publicValues, _sig)) {
-            revert InvalidOrder();
-        }
-
-        // Validate the pool key
-        // Validate the outputs of the proof
-
-        (
-            address walletAddress,
-            bytes memory permit2Signature,
-            uint256 permit2Nonce,
-            uint256 permit2Deadline
-        ) = (
-                _publicValues.walletAddress,
-                _publicValues.permit2Signature,
-                _publicValues.permit2Nonce,
-                _publicValues.permit2Deadline
-            );
-
-        (uint160 sqrtPriceX96, , , ) = poolManager.getSlot0(key.toId());
-
-        uint128 liquidity = poolManager.getLiquidity(key.toId());
-        (
-            // TODO: Figure out if this is the beforeSwapDelta we pass back
-            // or if it is fine because we are conducting the swap here
-            BeforeSwapDelta beforeSwapDelta,
-            uint256 amountOut,
-            uint256 amountIn,
-
-        ) = _getSwapDeltas(
-                sqrtPriceX96,
-                liquidity,
-                params.amountSpecified,
-                params.zeroForOne
-            );
-
-        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer
-            .PermitTransferFrom({
-                permitted: ISignatureTransfer.TokenPermissions({
-                    token: params.zeroForOne
-                        ? Currency.unwrap(key.currency0)
-                        : Currency.unwrap(key.currency1),
-                    amount: amountIn // NOTE: This is the amount of the token that is swapped in (should confirm that it is the amount specified)
-                    // amount: 100 * 10 ** 18
-                }),
-                nonce: permit2Nonce,
-                deadline: permit2Deadline
-            });
-
-        ISignatureTransfer.SignatureTransferDetails
-            memory transferDetails = ISignatureTransfer
-                .SignatureTransferDetails({
-                    to: address(this),
-                    // requestedAmount: 100 * 10 ** 18
-                    requestedAmount: amountIn
-                });
-
-        ISignatureTransfer(PERMIT2).permitTransferFrom(
-            permit,
-            transferDetails,
-            walletAddress,
-            permit2Signature
-        );
-
-        _settle(
-            params.zeroForOne // Gets the token that is swapped in
-                ? Currency(key.currency0)
-                : Currency(key.currency1),
-            uint128(amountIn)
-        );
-
-        // Can skip the entire amount to swap here if we just do the swap here
-        // At this point the first token is already in the pool so we need to call _take
-        _take(
-            params.zeroForOne // Gets the token that is swapped out
-                ? Currency(key.currency1)
-                : Currency(key.currency0),
-            uint128(amountOut),
-            walletAddress
-        );
-
-        // Return the appropriate values
-        return (this.beforeSwap.selector, beforeSwapDelta, 0);
-    }
-
-    // TODO: Update so that the PoolKey sqrtPriceCurrentX96, liquidity are what you need
-    function _getSwapDeltas(
-        uint160 sqrtPriceCurrentX96,
-        uint128 liquidity,
-        int256 amountSpecified,
-        bool zeroForOne
-    )
-        internal
-        view
-        returns (
-            BeforeSwapDelta beforeSwapDelta,
-            uint256 amountOut,
-            uint256 amountIn,
-            uint160 sqrtPriceX96Next
-        )
-    {
-        if (amountSpecified > 0) {
-            amountOut = uint256(amountSpecified);
-            if (zeroForOne) {
-                (amountIn, , sqrtPriceX96Next) = MiladyPoolMath
-                    .getSwapAmountsFromAmount0(
-                        sqrtPriceCurrentX96,
-                        liquidity,
-                        amountOut
-                    );
-            } else {
-                (, amountIn, sqrtPriceX96Next) = MiladyPoolMath
-                    .getSwapAmountsFromAmount1(
-                        sqrtPriceCurrentX96,
-                        liquidity,
-                        amountOut
-                    );
-            }
-        } else {
-            amountIn = uint256(-amountSpecified);
-            if (zeroForOne) {
-                (, amountOut, sqrtPriceX96Next) = MiladyPoolMath
-                    .getSwapAmountsFromAmount0(
-                        sqrtPriceCurrentX96,
-                        liquidity,
-                        amountIn
-                    );
-            } else {
-                (amountOut, , sqrtPriceX96Next) = MiladyPoolMath
-                    .getSwapAmountsFromAmount1(
-                        sqrtPriceCurrentX96,
-                        liquidity,
-                        amountIn
-                    );
-            }
-        }
-
-        // beforeSwapDelta = toBeforeSwapDelta(
-        //     int128(uint128(amountIn)), // specified == token0/token1
-        //     -int128(uint128(amountOut)) // unspecified == token1/token0
-        // );
-        beforeSwapDelta = toBeforeSwapDelta(0, 0);
-    }
-
-    function _settle(Currency currency, uint128 amount) internal {
-        // Should be used to move the tokens received via permit2 to the pool manager
-        poolManager.sync(currency);
-        currency.transfer(address(poolManager), amount);
-        poolManager.settle();
-    }
-
-    function _take(Currency currency, uint128 amount, address trader) internal {
-        // Should be used to move the tokens received via permit2 to the pool manager
-        poolManager.take(currency, trader, amount);
     }
 }
