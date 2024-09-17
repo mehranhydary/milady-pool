@@ -45,11 +45,11 @@ abstract contract Hook is BaseHook {
                 afterAddLiquidity: false,
                 beforeRemoveLiquidity: false,
                 afterRemoveLiquidity: false,
-                beforeSwap: true,
+                beforeSwap: false,
                 afterSwap: true,
                 beforeDonate: false,
                 afterDonate: false,
-                beforeSwapReturnDelta: true,
+                beforeSwapReturnDelta: false,
                 afterSwapReturnDelta: false,
                 afterAddLiquidityReturnDelta: false,
                 afterRemoveLiquidityReturnDelta: false

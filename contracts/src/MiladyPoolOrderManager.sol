@@ -69,16 +69,6 @@ contract MiladyPoolOrderManager is
         return this.afterInitialize.selector;
     }
 
-    function beforeSwap(
-        address sender,
-        PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
-        bytes calldata data
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
-        // TODO: Come back to this
-        return (this.beforeSwap.selector, toBeforeSwapDelta(0, 0), 0);
-    }
-
     function afterSwap(
         address,
         PoolKey calldata key,

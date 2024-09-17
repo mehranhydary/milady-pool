@@ -182,22 +182,22 @@ contract MiladyPoolRouter is WyvernInspired {
         //     walletAddress
         // );
 
-        if (deltaAfter0 < 0) {
-            data.key.currency0.settle(
-                manager,
-                walletAddress,
-                uint256(-deltaAfter0),
-                true
-            );
-        }
-        if (deltaAfter1 < 0) {
-            data.key.currency1.settle(
-                manager,
-                walletAddress,
-                uint256(-deltaAfter1),
-                true
-            );
-        }
+        // if (deltaAfter0 < 0) {
+        //     data.key.currency0.settle(
+        //         manager,
+        //         walletAddress,
+        //         uint256(-deltaAfter0),
+        //         true
+        //     );
+        // }
+        // if (deltaAfter1 < 0) {
+        //     data.key.currency1.settle(
+        //         manager,
+        //         walletAddress,
+        //         uint256(-deltaAfter1),
+        //         true
+        //     );
+        // }
         if (deltaAfter0 > 0) {
             data.key.currency0.take(
                 manager,
